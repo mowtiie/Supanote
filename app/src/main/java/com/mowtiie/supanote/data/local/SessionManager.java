@@ -3,11 +3,17 @@ package com.mowtiie.supanote.data.local;
 import android.content.Context;
 import android.content.SharedPreferences;
 
+import androidx.security.crypto.EncryptedSharedPreferences;
+import androidx.security.crypto.MasterKey;
+
 import org.json.JSONObject;
+
+import java.io.IOException;
+import java.security.GeneralSecurityException;
 
 public class SessionManager {
 
-    private static final String PREFS = "supabase_session";
+    private static final String PREFS = "supabase_session_secure";
     private static final String K_ACCESS = "access_token";
     private static final String K_REFRESH = "refresh_token";
     private static final String K_EMAIL = "user_email";
@@ -15,7 +21,32 @@ public class SessionManager {
     private final SharedPreferences prefs;
 
     public SessionManager(Context context) {
-        prefs = context.getApplicationContext().getSharedPreferences(PREFS, Context.MODE_PRIVATE);
+        prefs = buildEncryptedPrefs(context.getApplicationContext());
+    }
+
+    private static SharedPreferences buildEncryptedPrefs(Context context) {
+        try {
+            return create(context);
+        } catch (GeneralSecurityException | IOException e) {
+            context.deleteSharedPreferences(PREFS);
+            try {
+                return create(context);
+            } catch (GeneralSecurityException | IOException retry) {
+                throw new RuntimeException("Could not create encrypted prefs", retry);
+            }
+        }
+    }
+
+    private static SharedPreferences create(Context context) throws GeneralSecurityException, IOException {
+        MasterKey masterKey = new MasterKey.Builder(context)
+                .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+                .build();
+        return EncryptedSharedPreferences.create(
+                context,
+                PREFS,
+                masterKey,
+                EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+                EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM);
     }
 
     public void saveSession(JSONObject session) {
