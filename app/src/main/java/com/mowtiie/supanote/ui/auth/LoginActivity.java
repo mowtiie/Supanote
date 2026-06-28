@@ -1,4 +1,4 @@
-package com.mowtiie.supanote.ui.activities;
+package com.mowtiie.supanote.ui.auth;
 
 import android.os.Bundle;
 
