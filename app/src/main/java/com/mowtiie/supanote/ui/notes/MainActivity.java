@@ -1,5 +1,6 @@
 package com.mowtiie.supanote.ui.notes;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -17,8 +18,10 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.textfield.TextInputEditText;
 import com.mowtiie.supanote.R;
+import com.mowtiie.supanote.SupanoteApp;
 import com.mowtiie.supanote.data.model.Note;
 import com.mowtiie.supanote.databinding.ActivityMainBinding;
+import com.mowtiie.supanote.ui.auth.LoginActivity;
 
 public class MainActivity extends AppCompatActivity implements NoteAdapter.OnNoteAction {
 
@@ -32,6 +35,12 @@ public class MainActivity extends AppCompatActivity implements NoteAdapter.OnNot
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         binding = ActivityMainBinding.inflate(getLayoutInflater());
+
+        if (!((SupanoteApp) getApplication()).session().isLoggedIn()) {
+            startActivity(new Intent(this, LoginActivity.class));
+            return;
+        }
+
         setContentView(binding.getRoot());
         setSupportActionBar(binding.toolbar);
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
