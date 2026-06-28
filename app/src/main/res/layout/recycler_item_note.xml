@@ -5,9 +5,10 @@
     android:clickable="true"
     android:focusable="true"
     app:cardUseCompatPadding="true"
-    style="@style/Widget.Material3.CardView.Filled"
+    style="@style/Widget.Material3.CardView.Outlined"
     app:cardElevation="0dp"
-    app:cardBackgroundColor="?attr/colorSurfaceContainer"
+    app:cardBackgroundColor="?attr/colorSurface"
+    android:layout_marginHorizontal="8dp"
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
 
