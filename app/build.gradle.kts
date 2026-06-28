@@ -36,6 +36,7 @@ android {
 }
 
 dependencies {
+    implementation(libs.okhttp)
     implementation(libs.activity.ktx)
     implementation(libs.appcompat)
     implementation(libs.constraintlayout)
