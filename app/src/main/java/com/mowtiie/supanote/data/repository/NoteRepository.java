@@ -5,7 +5,10 @@ import android.os.Looper;
 
 import androidx.annotation.NonNull;
 
+import com.mowtiie.supanote.BuildConfig;
+import com.mowtiie.supanote.data.local.SessionManager;
 import com.mowtiie.supanote.data.model.Note;
+import com.mowtiie.supanote.data.remote.TokenAuthenticator;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -25,26 +28,29 @@ import okhttp3.ResponseBody;
 
 public class NoteRepository {
 
-    private static final String SUPABASE_URL = "https://tzwsrfwaeejdrstuyaay.supabase.co";
-    private static final String API_KEY = "sb_publishable_0Q9e_BnXKrdKFOPAJu7YAA_XaRkNCLC";
-
+    private static final String REST = BuildConfig.SUPABASE_URL + "/rest/v1/";
+    private static final String API_KEY = BuildConfig.SUPABASE_KEY;
     private static final String TABLE = "notes";
-    private static final String REST = SUPABASE_URL + "/rest/v1/";
     private static final MediaType JSON = MediaType.get("application/json");
 
-    private final OkHttpClient client = new OkHttpClient();
+    private final SessionManager session;
+    private final OkHttpClient client;
     private final Handler main = new Handler(Looper.getMainLooper());
 
-    public interface Callback<T> {
-        void onSuccess(T result);
-        void onError(Exception e);
+    public NoteRepository(SessionManager session) {
+        this.session = session;
+        this.client = new OkHttpClient.Builder()
+                .authenticator(new TokenAuthenticator(session))
+                .build();
     }
+
+    public interface Callback<T> { void onSuccess(T result); void onError(Exception e); }
 
     private Request.Builder base(String url) {
         return new Request.Builder()
                 .url(url)
                 .addHeader("apikey", API_KEY)
-                .addHeader("Authorization", "Bearer " + API_KEY);
+                .addHeader("Authorization", "Bearer " + session.getAccessToken()); // user's JWT
     }
 
     // READ FUNCTION

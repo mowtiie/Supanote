@@ -1,18 +1,23 @@
 package com.mowtiie.supanote.ui.notes;
 
+import android.app.Application;
+
+import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
-import androidx.lifecycle.ViewModel;
 
+import com.mowtiie.supanote.data.local.SessionManager;
 import com.mowtiie.supanote.data.model.Note;
 import com.mowtiie.supanote.data.repository.NoteRepository;
+
+import org.jspecify.annotations.NonNull;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class NoteViewModel extends ViewModel {
+public class NoteViewModel extends AndroidViewModel {
 
-    private final NoteRepository repo = new NoteRepository();
+    private final NoteRepository repo;
 
     private final MutableLiveData<List<Note>> notes = new MutableLiveData<>(new ArrayList<>());
     private final MutableLiveData<Boolean> loading = new MutableLiveData<>(false);
@@ -24,6 +29,11 @@ public class NoteViewModel extends ViewModel {
 
     public void clearError() { error.setValue(null); }
 
+    public NoteViewModel(@NonNull Application app) {
+        super(app);
+        repo = new NoteRepository(new SessionManager(app));
+    }
+
     private List<Note> currentList() {
         List<Note> c = notes.getValue();
         return c == null ? new ArrayList<>() : new ArrayList<>(c);
@@ -31,12 +41,15 @@ public class NoteViewModel extends ViewModel {
 
     public void loadNotes() {
         loading.setValue(true);
-        repo.getNotes(new NoteRepository.Callback<List<Note>>() {
-            @Override public void onSuccess(List<Note> result) {
+        repo.getNotes(new NoteRepository.Callback<>() {
+            @Override
+            public void onSuccess(List<Note> result) {
                 loading.setValue(false);
                 notes.setValue(result);
             }
-            @Override public void onError(Exception e) {
+
+            @Override
+            public void onError(Exception e) {
                 loading.setValue(false);
                 error.setValue(e.getMessage());
             }
