@@ -1,4 +1,4 @@
-package com.mowtiie.supanote.ui.adapters;
+package com.mowtiie.supanote.ui.notes;
 
 import android.view.LayoutInflater;
 import android.view.View;

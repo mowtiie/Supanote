@@ -1,4 +1,4 @@
-package com.mowtiie.supanote.ui.activities;
+package com.mowtiie.supanote.ui.notes;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -18,9 +18,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.textfield.TextInputEditText;
 import com.mowtiie.supanote.R;
 import com.mowtiie.supanote.data.model.Note;
-import com.mowtiie.supanote.ui.notes.NoteViewModel;
 import com.mowtiie.supanote.databinding.ActivityMainBinding;
-import com.mowtiie.supanote.ui.adapters.NoteAdapter;
 
 public class MainActivity extends AppCompatActivity implements NoteAdapter.OnNoteAction {
 
