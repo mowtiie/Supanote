@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
 }
@@ -18,6 +20,18 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        val props = Properties()
+        val f = rootProject.file("local.properties")
+        if (f.exists()) {
+            f.inputStream().use { props.load(it) }
+        }
+
+        val supabaseUrl = props.getProperty("SUPABASE_URL") ?: ""
+        val supabaseKey = props.getProperty("SUPABASE_KEY") ?: ""
+
+        buildConfigField("String", "SUPABASE_URL", "\"$supabaseUrl\"")
+        buildConfigField("String", "SUPABASE_KEY", "\"$supabaseKey\"")
     }
 
     buildTypes {
