@@ -47,7 +47,6 @@ public class LoginActivity extends AppCompatActivity {
         authViewModel.getLoading().observe(this, l -> {
             binding.signIn.setEnabled(!l);
             binding.signUp.setEnabled(!l);
-            binding.signUp.setText("Singing in...");
         });
 
         authViewModel.getError().observe(this, msg -> {
