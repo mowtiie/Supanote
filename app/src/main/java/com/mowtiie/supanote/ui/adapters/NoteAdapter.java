@@ -11,7 +11,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textview.MaterialTextView;
 import com.mowtiie.supanote.R;
-import com.mowtiie.supanote.data.note.Note;
+import com.mowtiie.supanote.data.model.Note;
 
 import org.jspecify.annotations.NonNull;
 

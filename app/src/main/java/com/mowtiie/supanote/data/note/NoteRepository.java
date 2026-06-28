@@ -5,6 +5,8 @@ import android.os.Looper;
 
 import androidx.annotation.NonNull;
 
+import com.mowtiie.supanote.data.model.Note;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;

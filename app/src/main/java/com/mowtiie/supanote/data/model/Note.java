@@ -1,4 +1,4 @@
-package com.mowtiie.supanote.data.note;
+package com.mowtiie.supanote.data.model;
 
 public class Note {
 

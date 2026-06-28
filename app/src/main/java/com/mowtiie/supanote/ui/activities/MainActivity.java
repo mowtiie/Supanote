@@ -15,10 +15,9 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
-import com.google.android.material.progressindicator.CircularProgressIndicator;
 import com.google.android.material.textfield.TextInputEditText;
 import com.mowtiie.supanote.R;
-import com.mowtiie.supanote.data.note.Note;
+import com.mowtiie.supanote.data.model.Note;
 import com.mowtiie.supanote.data.note.NoteViewModel;
 import com.mowtiie.supanote.databinding.ActivityMainBinding;
 import com.mowtiie.supanote.ui.adapters.NoteAdapter;
