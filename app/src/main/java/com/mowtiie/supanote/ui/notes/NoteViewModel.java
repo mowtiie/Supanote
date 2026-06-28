@@ -1,4 +1,4 @@
-package com.mowtiie.supanote.data.note;
+package com.mowtiie.supanote.ui.notes;
 
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
