@@ -31,6 +31,7 @@
             android:hint="Email"
             android:layout_marginBottom="16dp"
             app:endIconMode="clear_text"
+            app:startIconDrawable="@drawable/ic_mail"
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
 
@@ -46,6 +47,7 @@
             android:id="@+id/password_layout"
             android:hint="Password"
             app:endIconMode="password_toggle"
+            app:startIconDrawable="@drawable/ic_lock"
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
 
