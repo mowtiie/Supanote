@@ -14,10 +14,10 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Supanote">
         <activity
-            android:name=".ui.activities.LoginActivity"
+            android:name=".ui.activities.MainActivity"
             android:exported="false" />
         <activity
-            android:name=".ui.activities.MainActivity"
+            android:name=".ui.activities.LoginActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
