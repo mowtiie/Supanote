@@ -5,6 +5,7 @@ import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
 import com.mowtiie.supanote.data.model.Note;
+import com.mowtiie.supanote.data.repository.NoteRepository;
 
 import java.util.ArrayList;
 import java.util.List;

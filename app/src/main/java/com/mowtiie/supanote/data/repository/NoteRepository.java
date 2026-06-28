@@ -1,4 +1,4 @@
-package com.mowtiie.supanote.data.note;
+package com.mowtiie.supanote.data.repository;
 
 import android.os.Handler;
 import android.os.Looper;
