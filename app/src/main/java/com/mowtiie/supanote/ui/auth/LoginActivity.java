@@ -32,6 +32,7 @@ public class LoginActivity extends AppCompatActivity {
         if (!((SupanoteApp) getApplication()).connection().isConfigured()) {
             startActivity(new Intent(this, SetupActivity.class));
             finish();
+            return;
         }
 
         if (((SupanoteApp) getApplication()).session().isLoggedIn()) {

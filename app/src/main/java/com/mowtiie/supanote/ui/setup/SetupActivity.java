@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
@@ -25,6 +26,7 @@ import okhttp3.Call;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
+import okhttp3.ResponseBody;
 
 public class SetupActivity extends AppCompatActivity {
 
@@ -83,9 +85,8 @@ public class SetupActivity extends AppCompatActivity {
 
     private void testConnection(String url, String key) {
         Request req = new Request.Builder()
-                .url(url + "/rest/v1/")
+                .url(url + "/auth/v1/settings")
                 .addHeader("apikey", key)
-                .addHeader("Authorization", "Bearer " + key)
                 .build();
         final String fUrl = url, fKey = key;
         client.newCall(req).enqueue(new okhttp3.Callback() {
@@ -97,11 +98,14 @@ public class SetupActivity extends AppCompatActivity {
             }
             @Override public void onResponse(Call call, Response res) {
                 int code = res.code();
-                res.close();
+                String body = "";
+                try (ResponseBody b = res.body()) { if (b != null) body = b.string(); } catch (IOException ignored) {}
+                final String fBody = body;
                 main.post(() -> {
                     setLoading(false);
-                    if (code == 401) {
-                        Toast.makeText(SetupActivity.this, "Server reached, but that anon key looks wrong.", Toast.LENGTH_SHORT).show();
+                    if (code == 401 || code == 403) {
+                        Toast.makeText(SetupActivity.this, "Key rejected (" + code + "): " + shorten(fBody), Toast.LENGTH_SHORT).show();
+                        Log.d("SETUP ACTIVITY", "Key rejected (" + code + "): " + shorten(fBody));
                     } else {
                         ((SupanoteApp) getApplication()).connection().save(fUrl, fKey);
                         goToLogin();
@@ -109,6 +113,12 @@ public class SetupActivity extends AppCompatActivity {
                 });
             }
         });
+    }
+
+    private String shorten(String s) {
+        if (s == null) return "";
+        s = s.trim();
+        return s.length() > 120 ? s.substring(0, 120) + "…" : s;
     }
 
     private void setLoading(boolean loading) {

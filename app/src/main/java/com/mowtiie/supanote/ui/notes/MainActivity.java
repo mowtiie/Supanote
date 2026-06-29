@@ -43,10 +43,12 @@ public class MainActivity extends AppCompatActivity implements NoteAdapter.OnNot
         if (!((SupanoteApp) getApplication()).connection().isConfigured()) {
             startActivity(new Intent(this, SetupActivity.class));
             finish();
+            return;
         }
 
-        if (((SupanoteApp) getApplication()).session().isLoggedIn()) {
+        if (!((SupanoteApp) getApplication()).session().isLoggedIn()) {
             startActivity(new Intent(this, LoginActivity.class));
+            finish();
             return;
         }
 
