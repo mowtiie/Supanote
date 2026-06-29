@@ -15,10 +15,13 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Supanote">
         <activity
+            android:name=".ui.auth.LoginActivity"
+            android:exported="false" />
+        <activity
             android:name=".ui.notes.MainActivity"
             android:exported="false" />
         <activity
-            android:name=".ui.auth.LoginActivity"
+            android:name=".ui.setup.SetupActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
