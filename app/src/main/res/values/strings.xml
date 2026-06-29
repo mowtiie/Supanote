@@ -1,3 +1,13 @@
 <resources>
     <string name="app_name">Supanote</string>
+
+    <string name="server_setup_heading">Server Setup</string>
+    <string name="server_setup_description">Create a free Supabase project, run the setup SQL from the README, then paste your Project URL and anon (publishable) key below.</string>
+    
+    <string name="hint_server_url">Server Url</string>
+    <string name="hint_server_publishable_key">Publishable Key</string>
+
+    <string name="helper_server_url">e.g https://yourproject.supabase.co</string>
+    
+    <string name="button_connect">Connect</string>
 </resources>
