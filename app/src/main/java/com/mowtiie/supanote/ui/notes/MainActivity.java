@@ -27,6 +27,8 @@ import com.mowtiie.supanote.databinding.ActivityMainBinding;
 import com.mowtiie.supanote.ui.auth.LoginActivity;
 import com.mowtiie.supanote.ui.setup.SetupActivity;
 
+import java.util.Set;
+
 public class MainActivity extends AppCompatActivity implements NoteAdapter.OnNoteAction {
 
     private NoteViewModel noteViewModel;
@@ -135,6 +137,16 @@ public class MainActivity extends AppCompatActivity implements NoteAdapter.OnNot
         if (item.getItemId() == R.id.menu_item_signout) {
             ((SupanoteApp) getApplication()).session().clear();
             startActivity(new Intent(this, LoginActivity.class));
+            finish();
+            return true;
+        }
+
+        if (item.getItemId() == R.id.menu_item_changer_server) {
+            SupanoteApp supanoteApp = (SupanoteApp) getApplication();
+            supanoteApp.session().clear();
+            supanoteApp.connection().clear();
+
+            startActivity(new Intent(this, SetupActivity.class));
             finish();
             return true;
         }
