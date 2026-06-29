@@ -15,6 +15,7 @@ import com.mowtiie.supanote.R;
 import com.mowtiie.supanote.SupanoteApp;
 import com.mowtiie.supanote.databinding.ActivityLoginBinding;
 import com.mowtiie.supanote.ui.notes.MainActivity;
+import com.mowtiie.supanote.ui.setup.SetupActivity;
 
 import java.util.Objects;
 
@@ -27,14 +28,19 @@ public class LoginActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        EdgeToEdge.enable(this);
-        binding = ActivityLoginBinding.inflate(getLayoutInflater());
+
+        if (!((SupanoteApp) getApplication()).connection().isConfigured()) {
+            startActivity(new Intent(this, SetupActivity.class));
+            finish();
+        }
 
         if (((SupanoteApp) getApplication()).session().isLoggedIn()) {
             goToNotes();
             return;
         }
 
+        EdgeToEdge.enable(this);
+        binding = ActivityLoginBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());

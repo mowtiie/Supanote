@@ -3,6 +3,7 @@ package com.mowtiie.supanote.data.remote;
 import androidx.annotation.Nullable;
 
 import com.mowtiie.supanote.BuildConfig;
+import com.mowtiie.supanote.data.local.ConnectionManager;
 import com.mowtiie.supanote.data.local.SessionManager;
 
 import org.json.JSONObject;
@@ -22,10 +23,12 @@ public class TokenAuthenticator implements Authenticator {
     private static final String REFRESH_URL = BuildConfig.SUPABASE_URL + "/auth/v1/token?grant_type=refresh_token";
     private static final MediaType JSON = MediaType.get("application/json");
 
+    private final ConnectionManager connection;
     private final SessionManager session;
     private final OkHttpClient bare = new OkHttpClient();
 
-    public TokenAuthenticator(SessionManager session) {
+    public TokenAuthenticator(ConnectionManager connection, SessionManager session) {
+        this.connection = connection;
         this.session = session;
     }
 

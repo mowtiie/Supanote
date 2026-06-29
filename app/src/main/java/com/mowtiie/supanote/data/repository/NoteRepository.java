@@ -3,64 +3,56 @@ package com.mowtiie.supanote.data.repository;
 import android.os.Handler;
 import android.os.Looper;
 
-import androidx.annotation.NonNull;
 
-import com.mowtiie.supanote.BuildConfig;
+import com.mowtiie.supanote.data.local.ConnectionManager;
 import com.mowtiie.supanote.data.local.SessionManager;
 import com.mowtiie.supanote.data.model.Note;
 import com.mowtiie.supanote.data.remote.TokenAuthenticator;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
+import okhttp3.*;
+import org.json.*;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import okhttp3.Call;
-import okhttp3.MediaType;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
-import okhttp3.ResponseBody;
-
 public class NoteRepository {
 
-    private static final String REST = BuildConfig.SUPABASE_URL + "/rest/v1/";
-    private static final String API_KEY = BuildConfig.SUPABASE_KEY;
     private static final String TABLE = "notes";
     private static final MediaType JSON = MediaType.get("application/json");
 
+    private final ConnectionManager connection;
     private final SessionManager session;
     private final OkHttpClient client;
     private final Handler main = new Handler(Looper.getMainLooper());
 
-    public NoteRepository(SessionManager session) {
+    public NoteRepository(ConnectionManager connection, SessionManager session) {
+        this.connection = connection;
         this.session = session;
         this.client = new OkHttpClient.Builder()
-                .authenticator(new TokenAuthenticator(session))
+                .authenticator(new TokenAuthenticator(connection, session))
                 .build();
     }
 
     public interface Callback<T> { void onSuccess(T result); void onError(Exception e); }
 
+    private String rest() { return connection.getBaseUrl() + "/rest/v1/"; }
+
     private Request.Builder base(String url) {
         return new Request.Builder()
                 .url(url)
-                .addHeader("apikey", API_KEY)
-                .addHeader("Authorization", "Bearer " + session.getAccessToken()); // user's JWT
+                .addHeader("apikey", connection.getAnonKey())
+                .addHeader("Authorization", "Bearer " + session.getAccessToken());
     }
 
-    // READ FUNCTION
+    // ---------------------------- READ ----------------------------
     public void getNotes(Callback<List<Note>> cb) {
-        Request req = base(REST + TABLE + "?select=*&order=created_at.desc").build();
+        Request req = base(rest() + TABLE + "?select=*&order=created_at.desc").build();
         client.newCall(req).enqueue(new okhttp3.Callback() {
-            @Override public void onFailure(@NonNull Call call, @NonNull IOException e) { fail(cb, e); }
-            @Override public void onResponse(@NonNull Call call, @NonNull Response res) {
+            @Override public void onFailure(Call call, IOException e) { fail(cb, e); }
+            @Override public void onResponse(Call call, Response res) {
                 try (ResponseBody b = res.body()) {
-                    var json = b != null ? b.string() : "[]";
+                    String json = b != null ? b.string() : "[]";
                     if (!res.isSuccessful()) throw new IOException("HTTP " + res.code() + ": " + json);
                     List<Note> notes = parseNotes(json);
                     main.post(() -> cb.onSuccess(notes));
@@ -69,7 +61,7 @@ public class NoteRepository {
         });
     }
 
-    // CREATE FUNCTION
+    // ---------------------------- CREATE ----------------------------
     public void addNote(String title, String content, Callback<Note> cb) {
         JSONObject obj = new JSONObject();
         try {
@@ -77,7 +69,7 @@ public class NoteRepository {
             obj.put("content", content);
         } catch (JSONException e) { cb.onError(e); return; }
 
-        Request req = base(REST + TABLE)
+        Request req = base(rest() + TABLE)
                 .addHeader("Content-Type", "application/json")
                 .addHeader("Prefer", "return=representation")
                 .post(RequestBody.create(obj.toString(), JSON))
@@ -85,7 +77,7 @@ public class NoteRepository {
         enqueueSingle(req, cb);
     }
 
-    // UPDATE FUNCTION
+    // ---------------------------- UPDATE ----------------------------
     public void updateNote(long id, String title, String content, Callback<Note> cb) {
         JSONObject obj = new JSONObject();
         try {
@@ -93,7 +85,7 @@ public class NoteRepository {
             obj.put("content", content);
         } catch (JSONException e) { cb.onError(e); return; }
 
-        Request req = base(REST + TABLE + "?id=eq." + id)
+        Request req = base(rest() + TABLE + "?id=eq." + id)
                 .addHeader("Content-Type", "application/json")
                 .addHeader("Prefer", "return=representation")
                 .patch(RequestBody.create(obj.toString(), JSON))
@@ -101,12 +93,12 @@ public class NoteRepository {
         enqueueSingle(req, cb);
     }
 
-    // DELETE FUNCTION
+    // ---------------------------- DELETE ----------------------------
     public void deleteNote(long id, Callback<Void> cb) {
-        Request req = base(REST + TABLE + "?id=eq." + id).delete().build();
+        Request req = base(rest() + TABLE + "?id=eq." + id).delete().build();
         client.newCall(req).enqueue(new okhttp3.Callback() {
-            @Override public void onFailure(@NonNull Call call, @NonNull IOException e) { fail(cb, e); }
-            @Override public void onResponse(@NonNull Call call, @NonNull Response res) {
+            @Override public void onFailure(Call call, IOException e) { fail(cb, e); }
+            @Override public void onResponse(Call call, Response res) {
                 try (ResponseBody b = res.body()) {
                     if (!res.isSuccessful()) {
                         String body = b != null ? b.string() : "";
@@ -118,12 +110,11 @@ public class NoteRepository {
         });
     }
 
-    // HELPER FUNCTIONS
-    // For inserts/updates: PostgREST returns an array with one element.
+    // ---------------------------- helpers ----------------------------
     private void enqueueSingle(Request req, Callback<Note> cb) {
         client.newCall(req).enqueue(new okhttp3.Callback() {
-            @Override public void onFailure(@NonNull Call call, @NonNull IOException e) { fail(cb, e); }
-            @Override public void onResponse(@NonNull Call call, @NonNull Response res) {
+            @Override public void onFailure(Call call, IOException e) { fail(cb, e); }
+            @Override public void onResponse(Call call, Response res) {
                 try (ResponseBody b = res.body()) {
                     String json = b != null ? b.string() : "";
                     if (!res.isSuccessful()) throw new IOException("HTTP " + res.code() + ": " + json);

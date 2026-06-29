@@ -6,6 +6,7 @@ import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
+import com.mowtiie.supanote.SupanoteApp;
 import com.mowtiie.supanote.data.local.SessionManager;
 import com.mowtiie.supanote.data.model.Note;
 import com.mowtiie.supanote.data.repository.NoteRepository;
@@ -31,7 +32,8 @@ public class NoteViewModel extends AndroidViewModel {
 
     public NoteViewModel(@NonNull Application app) {
         super(app);
-        repo = new NoteRepository(new SessionManager(app));
+        SupanoteApp supanoteApp = (SupanoteApp) app;
+        repo = new NoteRepository(supanoteApp.connection(), supanoteApp.session());
     }
 
     private List<Note> currentList() {

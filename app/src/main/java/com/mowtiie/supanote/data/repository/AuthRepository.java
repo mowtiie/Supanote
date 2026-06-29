@@ -4,6 +4,7 @@ import android.os.Handler;
 import android.os.Looper;
 
 import com.mowtiie.supanote.BuildConfig;
+import com.mowtiie.supanote.data.local.ConnectionManager;
 import com.mowtiie.supanote.data.local.SessionManager;
 
 import org.json.JSONObject;
@@ -27,8 +28,12 @@ public class AuthRepository {
     private final OkHttpClient client = new OkHttpClient();
     private final Handler main = new Handler(Looper.getMainLooper());
     private final SessionManager session;
+    private final ConnectionManager connection;
 
-    public AuthRepository(SessionManager session) { this.session = session; }
+    public AuthRepository(ConnectionManager connection, SessionManager session) {
+        this.session = session;
+        this.connection = connection;
+    }
 
     public interface Callback {
         void onSuccess();
@@ -36,11 +41,10 @@ public class AuthRepository {
     }
 
     public void signUp(String email, String password, Callback cb) {
-        post(AUTH + "signup", email, password, cb);
+        post(connection.getBaseUrl() + "/auth/v1/signup", email, password, cb);
     }
-
     public void signIn(String email, String password, Callback cb) {
-        post(AUTH + "token?grant_type=password", email, password, cb);
+        post(connection.getBaseUrl() + "/auth/v1/token?grant_type=password", email, password, cb);
     }
 
     public void signOut() { session.clear(); }

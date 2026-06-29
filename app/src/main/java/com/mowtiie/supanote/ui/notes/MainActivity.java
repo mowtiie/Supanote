@@ -25,6 +25,7 @@ import com.mowtiie.supanote.SupanoteApp;
 import com.mowtiie.supanote.data.model.Note;
 import com.mowtiie.supanote.databinding.ActivityMainBinding;
 import com.mowtiie.supanote.ui.auth.LoginActivity;
+import com.mowtiie.supanote.ui.setup.SetupActivity;
 
 public class MainActivity extends AppCompatActivity implements NoteAdapter.OnNoteAction {
 
@@ -36,14 +37,19 @@ public class MainActivity extends AppCompatActivity implements NoteAdapter.OnNot
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        EdgeToEdge.enable(this);
-        binding = ActivityMainBinding.inflate(getLayoutInflater());
 
-        if (!((SupanoteApp) getApplication()).session().isLoggedIn()) {
+        if (!((SupanoteApp) getApplication()).connection().isConfigured()) {
+            startActivity(new Intent(this, SetupActivity.class));
+            finish();
+        }
+
+        if (((SupanoteApp) getApplication()).session().isLoggedIn()) {
             startActivity(new Intent(this, LoginActivity.class));
             return;
         }
 
+        EdgeToEdge.enable(this);
+        binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
         setSupportActionBar(binding.toolbar);
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {

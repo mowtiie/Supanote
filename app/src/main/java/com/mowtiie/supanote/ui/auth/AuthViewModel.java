@@ -6,6 +6,7 @@ import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
+import com.mowtiie.supanote.SupanoteApp;
 import com.mowtiie.supanote.data.local.SessionManager;
 import com.mowtiie.supanote.data.repository.AuthRepository;
 
@@ -19,7 +20,8 @@ public class AuthViewModel extends AndroidViewModel {
 
     public AuthViewModel(@NonNull Application app) {
         super(app);
-        repo = new AuthRepository(new SessionManager(app));
+        SupanoteApp supanoteApp = (SupanoteApp) app;
+        repo = new AuthRepository(supanoteApp.connection(), supanoteApp.session());
     }
 
     public LiveData<Boolean> getLoading()       { return loading; }
