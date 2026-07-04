@@ -46,7 +46,7 @@ public class SettingsActivity extends AppCompatActivity {
         binding = null;
     }
 
-    private static class SettingsFragment extends PreferenceFragmentCompat {
+    public static class SettingsFragment extends PreferenceFragmentCompat {
 
         @Override
         public void onCreatePreferences(@Nullable Bundle savedInstanceState, @Nullable String rootKey) {
