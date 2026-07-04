@@ -12,6 +12,7 @@ import androidx.activity.EdgeToEdge;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.SearchView;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -27,14 +28,26 @@ import com.mowtiie.supanote.databinding.ActivityMainBinding;
 import com.mowtiie.supanote.ui.auth.LoginActivity;
 import com.mowtiie.supanote.ui.setup.SetupActivity;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 
 public class MainActivity extends AppCompatActivity implements NoteAdapter.OnNoteAction {
 
+    private enum Sort { NEWEST, OLDEST, TITLE_AZ, TITLE_ZA }
+
     private NoteViewModel noteViewModel;
     private NoteAdapter noteAdapter;
-
     private ActivityMainBinding binding;
+
+    private List<Note> allNotes = new ArrayList<>();
+    private String searchQuery = "";
+    private Sort sortMode = Sort.NEWEST;
+
+    private boolean isLoading = false;
+    private boolean firstLoadDone = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,6 +65,8 @@ public class MainActivity extends AppCompatActivity implements NoteAdapter.OnNot
             return;
         }
 
+        firstLoadDone = savedInstanceState != null;
+
         EdgeToEdge.enable(this);
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
@@ -67,8 +82,20 @@ public class MainActivity extends AppCompatActivity implements NoteAdapter.OnNot
         binding.notesRecycler.setAdapter(noteAdapter);
 
         noteViewModel = new ViewModelProvider(this).get(NoteViewModel.class);
-        noteViewModel.getNotes().observe(this, notes -> noteAdapter.submitList(notes));
-        noteViewModel.getLoading().observe(this, isLoading -> binding.progress.setVisibility(isLoading ? View.VISIBLE : View.GONE));
+        noteViewModel.getNotes().observe(this, notes -> {
+            allNotes = notes != null ? notes : new ArrayList<>();
+            applyView();
+        });
+        noteViewModel.getLoading().observe(this, loading -> {
+            isLoading = loading;
+            binding.progress.setVisibility(loading ? View.VISIBLE : View.GONE);
+            if (loading) {
+                binding.emptyState.setVisibility(View.GONE);
+            } else {
+                firstLoadDone = true;
+                applyView();
+            }
+        });
         noteViewModel.getError().observe(this, msg -> {
             if (msg != null) {
                 Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
@@ -81,6 +108,52 @@ public class MainActivity extends AppCompatActivity implements NoteAdapter.OnNot
         if (savedInstanceState == null) {
             noteViewModel.loadNotes();
         }
+    }
+
+    private void applyView() {
+        List<Note> result = new ArrayList<>(allNotes);
+
+        if (!searchQuery.isEmpty()) {
+            String q = searchQuery.toLowerCase(Locale.getDefault());
+            List<Note> filtered = new ArrayList<>();
+            for (Note n : result) {
+                String title = n.getTitle() == null ? "" : n.getTitle().toLowerCase(Locale.getDefault());
+                String content = n.getContent() == null ? "" : n.getContent().toLowerCase(Locale.getDefault());
+                if (title.contains(q) || content.contains(q)) filtered.add(n);
+            }
+            result = filtered;
+        }
+
+        switch (sortMode) {
+            case OLDEST:
+                Collections.reverse(result);
+                break;
+            case TITLE_AZ:
+                Collections.sort(result, (a, b) -> title(a).compareToIgnoreCase(title(b)));
+                break;
+            case TITLE_ZA:
+                Collections.sort(result, (a, b) -> title(b).compareToIgnoreCase(title(a)));
+                break;
+            case NEWEST:
+            default:
+                break;
+        }
+
+        noteAdapter.submitList(result);
+        updateEmptyState(result.isEmpty());
+    }
+
+    private String title(Note n) { return n.getTitle() == null ? "" : n.getTitle(); }
+
+    private void updateEmptyState(boolean empty) {
+        if (isLoading || !firstLoadDone || !empty) {
+            binding.emptyState.setVisibility(View.GONE);
+            return;
+        }
+        binding.emptyState.setVisibility(View.VISIBLE);
+        binding.emptyState.setText(searchQuery.isEmpty()
+                ? "No notes yet — tap + to add one"
+                : "No notes match \u201C" + searchQuery + "\u201D");
     }
 
     @Override
@@ -131,27 +204,68 @@ public class MainActivity extends AppCompatActivity implements NoteAdapter.OnNot
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_main, menu);
+
+        MenuItem searchItem = menu.findItem(R.id.menu_item_search);
+        SearchView searchView = (SearchView) searchItem.getActionView();
+        if (searchView != null) {
+            searchView.setQueryHint("Search notes");
+            searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+                @Override public boolean onQueryTextSubmit(String query) { return false; }
+                @Override public boolean onQueryTextChange(String newText) {
+                    searchQuery = newText == null ? "" : newText.trim();
+                    applyView();
+                    return true;
+                }
+            });
+            searchItem.setOnActionExpandListener(new MenuItem.OnActionExpandListener() {
+                @Override public boolean onMenuItemActionExpand(@NonNull MenuItem item) { return true; }
+                @Override public boolean onMenuItemActionCollapse(@NonNull MenuItem item) {
+                    searchQuery = "";
+                    applyView();
+                    return true;
+                }
+            });
+        }
         return true;
     }
 
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        if (item.getItemId() == R.id.menu_item_signout) {
+        int id = item.getItemId();
+
+        if (id == R.id.menu_item_sort) {
+            showSortDialog();
+            return true;
+        }
+
+        if (id == R.id.menu_item_signout) {
             ((SupanoteApp) getApplication()).session().clear();
             startActivity(new Intent(this, LoginActivity.class));
             finish();
             return true;
         }
 
-        if (item.getItemId() == R.id.menu_item_changer_server) {
+        if (id == R.id.menu_item_changer_server) {
             SupanoteApp supanoteApp = (SupanoteApp) getApplication();
             supanoteApp.session().clear();
             supanoteApp.connection().clear();
-
             startActivity(new Intent(this, SetupActivity.class));
             finish();
             return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    private void showSortDialog() {
+        String[] labels = { "Newest first", "Oldest first", "Title (A\u2013Z)", "Title (Z\u2013A)" };
+        new MaterialAlertDialogBuilder(this)
+                .setTitle("Sort by")
+                .setSingleChoiceItems(labels, sortMode.ordinal(), (d, which) -> {
+                    sortMode = Sort.values()[which];
+                    applyView();
+                    d.dismiss();
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
     }
 }
