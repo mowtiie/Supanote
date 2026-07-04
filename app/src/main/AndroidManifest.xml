@@ -16,6 +16,7 @@
         android:theme="@style/Theme.Supanote">
         <activity
             android:name=".ui.setup.SettingsActivity"
+            android:parentActivityName=".ui.notes.MainActivity"
             android:exported="false" />
         <activity
             android:name=".ui.auth.LoginActivity"
