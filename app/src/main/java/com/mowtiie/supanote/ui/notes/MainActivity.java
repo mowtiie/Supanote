@@ -26,6 +26,7 @@ import com.mowtiie.supanote.SupanoteApp;
 import com.mowtiie.supanote.data.model.Note;
 import com.mowtiie.supanote.databinding.ActivityMainBinding;
 import com.mowtiie.supanote.ui.auth.LoginActivity;
+import com.mowtiie.supanote.ui.setup.SettingsActivity;
 import com.mowtiie.supanote.ui.setup.SetupActivity;
 
 import java.util.ArrayList;
@@ -251,6 +252,11 @@ public class MainActivity extends AppCompatActivity implements NoteAdapter.OnNot
             supanoteApp.connection().clear();
             startActivity(new Intent(this, SetupActivity.class));
             finish();
+            return true;
+        }
+
+        if (id == R.id.menu_item_settings) {
+            startActivity(new Intent(this, SettingsActivity.class));
             return true;
         }
         return super.onOptionsItemSelected(item);
