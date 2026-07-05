@@ -3,6 +3,7 @@ package com.mowtiie.supanote;
 import android.app.Application;
 
 import com.mowtiie.supanote.data.local.ConnectionManager;
+import com.mowtiie.supanote.data.local.CrashHandler;
 import com.mowtiie.supanote.data.local.SessionManager;
 import com.mowtiie.supanote.data.remote.TokenAuthenticator;
 
@@ -18,6 +19,8 @@ public class SupanoteApp extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
+        CrashHandler.install(this);
+
         session = new SessionManager(this);
         connection = new ConnectionManager(this);
         httpClient = new OkHttpClient();
