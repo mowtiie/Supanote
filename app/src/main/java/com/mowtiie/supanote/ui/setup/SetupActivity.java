@@ -32,12 +32,14 @@ public class SetupActivity extends AppCompatActivity {
 
     private ActivitySetupBinding binding;
 
-    private final OkHttpClient client = ((SupanoteApp) getApplication()).httpClient();
+    private OkHttpClient client;
     private final Handler main = new Handler(Looper.getMainLooper());
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        client = ((SupanoteApp) getApplication()).httpClient();
 
         if (((SupanoteApp) getApplication()).connection().isConfigured()) {
             goToLogin();
