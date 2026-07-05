@@ -38,20 +38,29 @@ public class TokenAuthenticator implements Authenticator {
             return null;
         }
 
-        String refresh = session.getRefreshToken();
-        if (refresh == null){
-            return null;
-        }
+        synchronized (this) {
+            String current = session.getAccessToken();
+            String failed = bearerOf(response.request());
+            if (current != null && !current.equals(failed)) {
+                return response.request().newBuilder().header("Authorization", "Bearer " + current).build();
+            }
+            String refresh = session.getRefreshToken();
+            if (refresh == null) {
+                return null;
+            }
 
-        String newAccess = refreshSync(refresh);
-        if (newAccess == null) {
-            session.clear();
-            return null;
+            String newAccess = refreshSync(refresh);
+            if (newAccess == null) {
+                session.clear();
+                return null;
+            }
+            return response.request().newBuilder().header("Authorization", "Bearer " + newAccess).build();
         }
+    }
 
-        return response.request().newBuilder()
-                .header("Authorization", "Bearer " + newAccess)
-                .build();
+    private String bearerOf(Request req) {
+        String h = req.header("Authorization");
+        return (h != null && h.startsWith("Bearer ")) ? h.substring(7) : null;
     }
 
     private String refreshSync(String refreshToken) {
