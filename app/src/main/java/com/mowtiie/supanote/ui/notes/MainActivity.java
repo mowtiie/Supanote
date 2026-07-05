@@ -91,7 +91,7 @@ public class MainActivity extends AppCompatActivity implements NoteAdapter.OnNot
             isLoading = loading;
             binding.progress.setVisibility(loading ? View.VISIBLE : View.GONE);
             if (loading) {
-                binding.emptyState.setVisibility(View.GONE);
+                binding.emptyStateContainer.setVisibility(View.GONE);
             } else {
                 firstLoadDone = true;
                 applyView();
@@ -148,11 +148,11 @@ public class MainActivity extends AppCompatActivity implements NoteAdapter.OnNot
 
     private void updateEmptyState(boolean empty) {
         if (isLoading || !firstLoadDone || !empty) {
-            binding.emptyState.setVisibility(View.GONE);
+            binding.emptyStateContainer.setVisibility(View.GONE);
             return;
         }
-        binding.emptyState.setVisibility(View.VISIBLE);
-        binding.emptyState.setText(searchQuery.isEmpty()
+        binding.emptyStateLabel.setVisibility(View.VISIBLE);
+        binding.emptyStateLabel.setText(searchQuery.isEmpty()
                 ? "No notes yet — tap + to add one"
                 : "No notes match \u201C" + searchQuery + "\u201D");
     }

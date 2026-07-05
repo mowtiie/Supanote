@@ -25,16 +25,32 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"/>
 
-    <com.google.android.material.textview.MaterialTextView
-        android:id="@+id/emptyState"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+    <LinearLayout
+        android:id="@+id/emptyStateContainer"
+        android:orientation="vertical"
         android:layout_gravity="center"
-        android:padding="24dp"
         android:gravity="center"
-        android:textAppearance="?attr/textAppearanceBodyLarge"
-        android:textColor="?android:attr/textColorSecondary"
-        android:visibility="gone" />
+        android:visibility="gone"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <ImageView
+            android:importantForAccessibility="no"
+            android:src="@drawable/ic_notes"
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            app:tint="?attr/colorTertiary" />
+
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/emptyStateLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?attr/textAppearanceBodyLarge"
+            android:textColor="?attr/colorOnSurfaceVariant"
+            android:fontFamily="sans-serif-medium"/>
+    </LinearLayout>
+
+
 
     <com.google.android.material.progressindicator.CircularProgressIndicator
         android:id="@+id/progress"
