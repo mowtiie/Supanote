@@ -28,7 +28,16 @@
     <string name="change_server_confirm_title">Change server?</string>
     <string name="change_server_confirm_message">You\'ll be signed out and need to reconnect to a server.</string>
     <string name="change_server_confirm_button">Continue</string>
-    
+
+    <!-- INTENT EXTRAS -->
+    <string name="extra_crash_email_subject">Centsation crash report</string>
+    <string name="extra_crash_email_chooser_title">Send report via…</string>
+
+    <!-- TOASTS -->
+    <string name="toast_crash_save_success">Crash report saved</string>
+    <string name="toast_crash_save_failure">Couldn\'t save crash report</string>
+    <string name="toast_crash_no_email_app">No email app installed</string>
+
     <!-- DIALOG TITLES -->
     <string name="dialog_title_crash">App has crashed</string>
 
