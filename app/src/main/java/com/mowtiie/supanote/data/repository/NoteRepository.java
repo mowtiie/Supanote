@@ -34,6 +34,45 @@ public class NoteRepository {
 
     public interface Callback<T> { void onSuccess(T result); void onError(Exception e); }
 
+    public void bulkInsert(List<JSONObject> notes, Callback<Integer> cb) {
+        JSONArray payload = new JSONArray();
+        try {
+            for (JSONObject src : notes) {
+                String title = src.optString("title", "").trim();
+                if (title.isEmpty()) continue;
+                JSONObject clean = new JSONObject();
+                clean.put("title", title);
+                clean.put("content", src.isNull("content") ? "" : src.optString("content", ""));
+                payload.put(clean);
+            }
+        } catch (JSONException e) {
+            cb.onError(e);
+            return;
+        }
+
+        if (payload.length() == 0) { cb.onSuccess(0); return; }
+        final int count = payload.length();
+
+        Request req = base(rest() + TABLE)
+                .addHeader("Content-Type", "application/json")
+                .addHeader("Prefer", "return=minimal")
+                .post(RequestBody.create(payload.toString(), JSON))
+                .build();
+
+        client.newCall(req).enqueue(new okhttp3.Callback() {
+            @Override public void onFailure(Call call, IOException e) { fail(cb, e); }
+            @Override public void onResponse(Call call, Response res) {
+                try (ResponseBody b = res.body()) {
+                    if (!res.isSuccessful()) {
+                        String body = b != null ? b.string() : "";
+                        throw new IOException("HTTP " + res.code() + ": " + body);
+                    }
+                    main.post(() -> cb.onSuccess(count));
+                } catch (Exception e) { fail(cb, e); }
+            }
+        });
+    }
+
     private String rest() { return connection.getBaseUrl() + "/rest/v1/"; }
 
     private Request.Builder base(String url) {

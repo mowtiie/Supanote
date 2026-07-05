@@ -336,60 +336,22 @@ public class SettingsActivity extends AppCompatActivity {
             SupanoteApp app = (SupanoteApp) requireActivity().getApplication();
             NoteRepository repo = new NoteRepository(app.connection(), app.session(), app.authedHttpClient());
 
-            executor.execute(() -> {
-                int succeeded = 0;
-                boolean anyFailed = false;
-
-                for (JSONObject note : notes) {
-                    String title;
-                    String content;
-                    try {
-                        title = note.getString(KEY_TITLE).trim();
-                        content = note.isNull(KEY_CONTENT) ? "" : note.optString(KEY_CONTENT, "");
-                    } catch (JSONException e) {
-                        anyFailed = true;
-                        continue;
-                    }
-                    if (title.isEmpty()) continue;
-
-                    CountDownLatch latch = new CountDownLatch(1);
-                    boolean[] ok = { false };
-                    repo.addNote(title, content, new NoteRepository.Callback<Note>() {
-                        @Override public void onSuccess(Note n) { ok[0] = true; latch.countDown(); }
-                        @Override public void onError(Exception e) {
-                            Log.e(TAG_IMPORT, "addNote failed", e);
-                            latch.countDown();
-                        }
-                    });
-
-                    try {
-                        if (!latch.await(30, TimeUnit.SECONDS)) {
-                            anyFailed = true;
-                            break;
-                        }
-                    } catch (InterruptedException e) {
-                        Thread.currentThread().interrupt();
-                        break;
-                    }
-
-                    if (ok[0]) succeeded++;
-                    else anyFailed = true;
-                }
-
-                final int total = succeeded;
-                final boolean failed = anyFailed;
-                postToUi(() -> {
+            repo.bulkInsert(notes, new NoteRepository.Callback<Integer>() {
+                @Override public void onSuccess(Integer count) {
+                    if (!isAdded()) return;
                     dismissProgressDialog();
-                    if (total > 0) {
-                        Toast.makeText(requireContext(),
-                                getString(R.string.toast_import_success, total),
-                                Toast.LENGTH_SHORT).show();
-                    } else if (failed) {
-                        Toast.makeText(requireContext(),
-                                R.string.toast_import_failed,
-                                Toast.LENGTH_SHORT).show();
-                    }
-                });
+                    Toast.makeText(requireContext(),
+                            getString(R.string.toast_import_success, count),
+                            Toast.LENGTH_SHORT).show();
+                }
+                @Override public void onError(Exception e) {
+                    Log.e(TAG_IMPORT, "Bulk import failed", e);
+                    if (!isAdded()) return;
+                    dismissProgressDialog();
+                    Toast.makeText(requireContext(),
+                            R.string.toast_import_failed,
+                            Toast.LENGTH_SHORT).show();
+                }
             });
         }
 
