@@ -3,6 +3,36 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <PreferenceCategory
+        android:title="@string/preferences_appearance_category"
+        app:iconSpaceReserved="false">
+
+        <ListPreference
+            android:key="theme"
+            android:title="@string/preferences_appearance_theme"
+            android:entries="@array/theme_entries"
+            android:entryValues="@array/theme_entry_values"
+            android:defaultValue="System Default"
+            app:useSimpleSummaryProvider="true"
+            app:iconSpaceReserved="false"/>
+
+        <ListPreference
+            android:key="contrast"
+            android:title="@string/preferences_appearance_contrast"
+            android:entries="@array/contrast_entries"
+            android:entryValues="@array/contrast_entry_values"
+            android:defaultValue="contrast_low"
+            app:useSimpleSummaryProvider="true"
+            app:iconSpaceReserved="false"/>
+
+        <SwitchPreferenceCompat
+            android:key="dynamic_colors"
+            android:widgetLayout="@layout/view_preference_switch"
+            app:iconSpaceReserved="false"
+            android:title="@string/preferences_appearance_dynamic_colors"
+            android:summary="@string/preferences_appearance_dynamic_colors_summary"/>
+    </PreferenceCategory>
+
+    <PreferenceCategory
         android:title="@string/preferences_backup_category"
         app:iconSpaceReserved="false">
 
