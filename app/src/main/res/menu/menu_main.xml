@@ -4,15 +4,16 @@
 
     <item
         android:id="@+id/menu_item_search"
-        android:title="Search"
+        android:title="@string/menu_search"
         android:icon="@drawable/ic_search"
         app:actionViewClass="androidx.appcompat.widget.SearchView"
         app:showAsAction="ifRoom|collapseActionView" />
 
     <item
         android:id="@+id/menu_item_sort"
-        android:title="Sort"
-        app:showAsAction="never" />
+        android:title="@string/menu_sort"
+        android:icon="@drawable/ic_sort"
+        app:showAsAction="ifRoom" />
 
     <item
         android:id="@+id/menu_item_changer_server"
@@ -21,7 +22,7 @@
 
     <item
         android:id="@+id/menu_item_settings"
-        android:title="Settings"
+        android:title="@string/menu_settings"
         app:showAsAction="never"/>
 
     <item
