@@ -16,18 +16,18 @@ import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
 
-public class CrashManager implements Thread.UncaughtExceptionHandler {
+public class CrashHandler implements Thread.UncaughtExceptionHandler {
 
     private final Context context;
     private final Thread.UncaughtExceptionHandler defaultHandler;
 
-    private CrashManager(Context context) {
+    private CrashHandler(Context context) {
         this.context = context.getApplicationContext();
         this.defaultHandler = Thread.getDefaultUncaughtExceptionHandler();
     }
 
     public static void install(Context context) {
-        Thread.setDefaultUncaughtExceptionHandler(new CrashManager(context));
+        Thread.setDefaultUncaughtExceptionHandler(new CrashHandler(context));
     }
 
     @Override
