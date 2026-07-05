@@ -11,6 +11,24 @@
 
     <string name="button_connect">Connect</string>
 
+    <string name="toast_export_no_notes">Nothing to export</string>
+    <string name="toast_export_success">Notes exported</string>
+    <string name="toast_export_failed">Export failed</string>
+    <string name="toast_import_success">Imported %1$d notes</string>
+    <string name="toast_import_failed">Import failed</string>
+    <string name="toast_import_invalid_file">That file isn\'t a Supanote backup</string>
+
+    <string name="progress_exporting">Exporting notes\u2026</string>
+    <string name="progress_importing">Importing notes\u2026</string>
+
+    <string name="import_confirm_title">Import notes?</string>
+    <string name="import_confirm_message">%1$d notes from the backup will be added to your account. Existing notes won\'t be changed.</string>
+    <string name="import_confirm_button">Import</string>
+
+    <string name="change_server_confirm_title">Change server?</string>
+    <string name="change_server_confirm_message">You\'ll be signed out and need to reconnect to a server.</string>
+    <string name="change_server_confirm_button">Continue</string>
+
     <!-- MENU ITEMS -->
     <string name="menu_search">Search</string>
     <string name="menu_sort">Sort</string>
