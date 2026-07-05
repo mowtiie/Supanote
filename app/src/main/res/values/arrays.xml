@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Theme list preference -->
+    <string-array name="theme_entries">
+        <item>System Default</item>
+        <item>Battery Saving</item>
+        <item>Light</item>
+        <item>Dark</item>
+    </string-array>
+    <string-array name="theme_entry_values" translatable="false">
+        <item>System Default</item>
+        <item>Battery Saving</item>
+        <item>Light</item>
+        <item>Dark</item>
+    </string-array>
+
+    <!-- Contrast list preference -->
+    <string-array name="contrast_entries">
+        <item>Low</item>
+        <item>Medium</item>
+        <item>High</item>
+    </string-array>
+    <string-array name="contrast_entry_values" translatable="false">
+        <item>contrast_low</item>
+        <item>contrast_medium</item>
+        <item>contrast_high</item>
+    </string-array>
+
+</resources>
