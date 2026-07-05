@@ -33,6 +33,7 @@
     <string name="menu_search">Search</string>
     <string name="menu_sort">Sort</string>
     <string name="menu_settings">Settings</string>
+    <string name="menu_sign_out">Sign out</string>
 
     <!-- BACKUP & RESTORE PREFERENCES -->
     <string name="preferences_backup_category">Backup &amp; Restore</string>

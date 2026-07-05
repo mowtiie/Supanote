@@ -16,18 +16,12 @@
         app:showAsAction="ifRoom" />
 
     <item
-        android:id="@+id/menu_item_changer_server"
-        android:title="Change server"
-        app:showAsAction="never"/>
-
-    <item
         android:id="@+id/menu_item_settings"
         android:title="@string/menu_settings"
         app:showAsAction="never"/>
 
     <item
         android:id="@+id/menu_item_signout"
-        android:title="Sign out"
+        android:title="@string/menu_sign_out"
         app:showAsAction="never" />
-
 </menu>

@@ -246,19 +246,11 @@ public class MainActivity extends AppCompatActivity implements NoteAdapter.OnNot
             return true;
         }
 
-        if (id == R.id.menu_item_changer_server) {
-            SupanoteApp supanoteApp = (SupanoteApp) getApplication();
-            supanoteApp.session().clear();
-            supanoteApp.connection().clear();
-            startActivity(new Intent(this, SetupActivity.class));
-            finish();
-            return true;
-        }
-
         if (id == R.id.menu_item_settings) {
             startActivity(new Intent(this, SettingsActivity.class));
             return true;
         }
+
         return super.onOptionsItemSelected(item);
     }
 
