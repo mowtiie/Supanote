@@ -2,7 +2,6 @@ package com.mowtiie.supanote.ui.notes;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -10,7 +9,6 @@ import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SearchView;
 import androidx.core.graphics.Insets;
@@ -20,7 +18,6 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
-import com.google.android.material.textfield.TextInputEditText;
 import com.mowtiie.supanote.R;
 import com.mowtiie.supanote.SupanoteApp;
 import com.mowtiie.supanote.data.model.Note;
@@ -33,7 +30,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
-import java.util.Set;
 
 public class MainActivity extends AppCompatActivity implements NoteAdapter.OnNoteAction {
 
@@ -104,7 +100,7 @@ public class MainActivity extends AppCompatActivity implements NoteAdapter.OnNot
             }
         });
 
-        binding.fabAdd.setOnClickListener(v -> showEditor(null));
+        binding.fabAdd.setOnClickListener(v -> startActivity(new Intent(this, ManageNoteActivity.class)));
 
         if (savedInstanceState == null) {
             noteViewModel.loadNotes();
@@ -130,10 +126,10 @@ public class MainActivity extends AppCompatActivity implements NoteAdapter.OnNot
                 Collections.reverse(result);
                 break;
             case TITLE_AZ:
-                Collections.sort(result, (a, b) -> title(a).compareToIgnoreCase(title(b)));
+                result.sort((a, b) -> title(a).compareToIgnoreCase(title(b)));
                 break;
             case TITLE_ZA:
-                Collections.sort(result, (a, b) -> title(b).compareToIgnoreCase(title(a)));
+                result.sort((a, b) -> title(b).compareToIgnoreCase(title(a)));
                 break;
             case NEWEST:
             default:
@@ -158,48 +154,12 @@ public class MainActivity extends AppCompatActivity implements NoteAdapter.OnNot
     }
 
     @Override
-    public void onEdit(Note note) {
-        showEditor(note);
-    }
-
-    @Override
-    public void onDelete(Note note) {
-        new MaterialAlertDialogBuilder(this)
-                .setTitle("Delete note?")
-                .setMessage(note.getTitle())
-                .setPositiveButton("Delete", (d, w) -> noteViewModel.deleteNote(note.getId()))
-                .setNegativeButton("Cancel", null)
-                .show();
-    }
-
-    private void showEditor(@Nullable Note note) {
-        View view = LayoutInflater.from(this).inflate(R.layout.dialog_note, null);
-        TextInputEditText titleInput = view.findViewById(R.id.note_input_title);
-        TextInputEditText contentInput = view.findViewById(R.id.note_input_content);
-
-        if (note != null) {
-            titleInput.setText(note.getTitle());
-            contentInput.setText(note.getContent());
-        }
-
-        new MaterialAlertDialogBuilder(this)
-                .setTitle(note == null ? "New note" : "Edit note")
-                .setView(view)
-                .setPositiveButton("Save", (d, w) -> {
-                    String title = titleInput.getText().toString().trim();
-                    String content = contentInput.getText().toString().trim();
-                    if (title.isEmpty()) {
-                        Toast.makeText(this, "Title can't be empty", Toast.LENGTH_SHORT).show();
-                        return;
-                    }
-                    if (note == null) {
-                        noteViewModel.addNote(title, content);
-                    } else {
-                        noteViewModel.updateNote(note.getId(), title, content);
-                    }
-                })
-                .setNegativeButton("Cancel", null)
-                .show();
+    public void onOpen(Note note) {
+        Intent intent = new Intent(this, ManageNoteActivity.class);
+        intent.putExtra(ManageNoteActivity.EXTRA_NOTE_ID, note.getId());
+        intent.putExtra(ManageNoteActivity.EXTRA_NOTE_TITLE, note.getTitle());
+        intent.putExtra(ManageNoteActivity.EXTRA_NOTE_CONTENT, note.getContent());
+        startActivity(intent);
     }
 
     @Override

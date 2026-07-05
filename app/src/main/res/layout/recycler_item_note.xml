@@ -15,47 +15,32 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
+        android:orientation="vertical"
         android:padding="16dp">
 
-        <LinearLayout
-            android:layout_width="0dp"
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/noteTitle"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:orientation="vertical">
+            android:textAppearance="?attr/textAppearanceTitleMedium"
+            android:maxLines="1"
+            android:ellipsize="end" />
 
-            <com.google.android.material.textview.MaterialTextView
-                android:id="@+id/noteTitle"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:maxLines="1"
-                android:text="Note Title"
-                android:textAppearance="?attr/textAppearanceTitleLarge"
-                android:fontFamily="serif"
-                android:textColor="?attr/colorOnSurface"
-                android:ellipsize="end" />
-
-            <com.google.android.material.textview.MaterialTextView
-                android:id="@+id/noteContent"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Note Content"
-                android:textColor="?attr/colorOnSurfaceVariant"
-                android:fontFamily="serif"
-                android:textAppearance="?attr/textAppearanceBodyLarge"
-                android:layout_marginTop="4dp"
-                android:ellipsize="end" />
-        </LinearLayout>
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/noteDelete"
-            android:layout_width="wrap_content"
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/noteContent"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:backgroundTint="?attr/colorError"
-            app:icon="@drawable/ic_delete"
-            app:iconTint="?attr/colorOnError"
-            style="?attr/materialIconButtonFilledStyle"
-            android:contentDescription="Delete note" />
+            android:layout_marginTop="4dp"
+            android:textAppearance="?attr/textAppearanceBodyMedium"
+            android:maxLines="2"
+            android:ellipsize="end" />
+
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/noteDate"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:textAppearance="?attr/textAppearanceBodySmall"
+            android:textColor="?android:attr/textColorSecondary" />
     </LinearLayout>
 </com.google.android.material.card.MaterialCardView>

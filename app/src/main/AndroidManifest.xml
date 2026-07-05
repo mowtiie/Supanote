@@ -16,6 +16,8 @@
         android:theme="@style/Theme.Supanote">
         <activity
             android:name=".ui.notes.ManageNoteActivity"
+            android:parentActivityName=".ui.notes.MainActivity"
+            android:windowSoftInputMode="adjustResize"
             android:exported="false" />
         <activity
             android:name=".ui.setup.SettingsActivity"
