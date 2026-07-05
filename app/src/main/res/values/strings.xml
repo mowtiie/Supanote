@@ -28,6 +28,10 @@
     <string name="change_server_confirm_title">Change server?</string>
     <string name="change_server_confirm_message">You\'ll be signed out and need to reconnect to a server.</string>
     <string name="change_server_confirm_button">Continue</string>
+    
+    <string name="button_crash_email">Email report</string>
+    <string name="button_crash_save">Export to file</string>
+    <string name="button_crash_dismiss">Dismiss</string>
 
     <!-- MENU ITEMS -->
     <string name="menu_search">Search</string>
