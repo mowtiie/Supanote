@@ -89,7 +89,7 @@ public class MainActivity extends AppCompatActivity implements NoteAdapter.OnNot
         });
         noteViewModel.getLoading().observe(this, loading -> {
             isLoading = loading;
-            binding.progress.setVisibility(loading ? View.VISIBLE : View.GONE);
+            binding.loadingIndicator.setVisibility(loading ? View.VISIBLE : View.GONE);
             if (loading) {
                 binding.emptyStateContainer.setVisibility(View.GONE);
             } else {
