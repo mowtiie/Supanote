@@ -415,7 +415,7 @@ public class SettingsActivity extends AppCompatActivity {
 
             View view = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_progress, null, false);
             MaterialTextView progressMessage = view.findViewById(R.id.progress_message);
-            progressMessage.setTextColor(messageRes);
+            progressMessage.setText(messageRes);
 
             progressDialog = new MaterialAlertDialogBuilder(requireContext())
                     .setView(view)
