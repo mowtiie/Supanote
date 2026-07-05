@@ -29,6 +29,13 @@
     <string name="change_server_confirm_message">You\'ll be signed out and need to reconnect to a server.</string>
     <string name="change_server_confirm_button">Continue</string>
     
+    <!-- DIALOG TITLES -->
+    <string name="dialog_title_crash">App has crashed</string>
+
+    <!-- DIALOG MESSAGES -->
+    <string name="dialog_message_crash">The app closed unexpectedly. You can help fix the issue by emailing the error report or saving it as a text file.</string>
+    
+    <!-- BUTTONS -->
     <string name="button_crash_email">Email report</string>
     <string name="button_crash_save">Export to file</string>
     <string name="button_crash_dismiss">Dismiss</string>
