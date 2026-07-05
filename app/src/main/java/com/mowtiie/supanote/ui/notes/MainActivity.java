@@ -27,7 +27,7 @@ import com.mowtiie.supanote.data.model.Note;
 import com.mowtiie.supanote.databinding.ActivityMainBinding;
 import com.mowtiie.supanote.ui.SupanoteActivity;
 import com.mowtiie.supanote.ui.auth.LoginActivity;
-import com.mowtiie.supanote.ui.setup.SettingsActivity;
+import com.mowtiie.supanote.ui.settings.SettingsActivity;
 import com.mowtiie.supanote.ui.setup.SetupActivity;
 
 import java.util.ArrayList;

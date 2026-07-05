@@ -1,4 +1,4 @@
-package com.mowtiie.supanote.ui.setup;
+package com.mowtiie.supanote.ui.settings;
 
 import android.content.Context;
 import android.content.Intent;
@@ -34,6 +34,7 @@ import com.mowtiie.supanote.data.model.Note;
 import com.mowtiie.supanote.data.repository.NoteRepository;
 import com.mowtiie.supanote.databinding.ActivitySettingsBinding;
 import com.mowtiie.supanote.ui.SupanoteActivity;
+import com.mowtiie.supanote.ui.setup.SetupActivity;
 
 import org.json.JSONArray;
 import org.json.JSONObject;

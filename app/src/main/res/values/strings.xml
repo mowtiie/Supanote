@@ -43,7 +43,7 @@
 
     <!-- DIALOG MESSAGES -->
     <string name="dialog_message_crash">The app closed unexpectedly. You can help fix the issue by emailing the error report or saving it as a text file.</string>
-    
+
     <!-- BUTTONS -->
     <string name="button_crash_email">Email report</string>
     <string name="button_crash_save">Export to file</string>
@@ -61,7 +61,7 @@
     <string name="preferences_appearance_contrast">Contrast</string>
     <string name="preferences_appearance_dynamic_colors">Dynamic Colors</string>
     <string name="preferences_appearance_dynamic_colors_summary">Apply colors from your wallpaper to the application theme</string>
-    
+
     <!-- SECURITY & PRIVACY PREFERENCES -->
     <string name="preferences_security_privacy_category">Security &amp; Privacy</string>
     <string name="preferences_security_privacy_screen">Screen Privacy</string>
