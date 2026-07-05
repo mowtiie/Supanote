@@ -15,4 +15,11 @@
     <string name="menu_search">Search</string>
     <string name="menu_sort">Sort</string>
     <string name="menu_settings">Settings</string>
+
+    <!-- BACKUP & RESTORE PREFERENCES -->
+    <string name="preferences_backup_category">Backup &amp; Restore</string>
+    <string name="preferences_backup_import">Import</string>
+    <string name="preferences_backup_import_summary">Import your notes</string>
+    <string name="preferences_backup_export">Export</string>
+    <string name="preferences_backup_export_summary">Export your notes</string>
 </resources>

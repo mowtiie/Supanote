@@ -1,4 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
-<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <PreferenceCategory
+        android:title="@string/preferences_backup_category"
+        app:iconSpaceReserved="false">
+
+        <Preference
+            android:key="import"
+            android:title="@string/preferences_backup_import"
+            android:summary="@string/preferences_backup_import_summary"
+            app:iconSpaceReserved="false"/>
+
+        <Preference
+            android:key="export"
+            android:title="@string/preferences_backup_export"
+            android:summary="@string/preferences_backup_export_summary"
+            app:iconSpaceReserved="false"/>
+    </PreferenceCategory>
 
 </PreferenceScreen>
