@@ -32,7 +32,7 @@ public class SetupActivity extends AppCompatActivity {
 
     private ActivitySetupBinding binding;
 
-    private final OkHttpClient client = new OkHttpClient();
+    private final OkHttpClient client = ((SupanoteApp) getApplication()).httpClient();
     private final Handler main = new Handler(Looper.getMainLooper());
 
     @Override

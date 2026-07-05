@@ -165,7 +165,7 @@ public class SettingsActivity extends AppCompatActivity {
             showProgressDialog(R.string.progress_exporting);
             Context appContext = requireContext().getApplicationContext();
             SupanoteApp app = (SupanoteApp) requireActivity().getApplication();
-            NoteRepository repo = new NoteRepository(app.connection(), app.session());
+            NoteRepository repo = new NoteRepository(app.connection(), app.session(), app.authedHttpClient());
 
             repo.getNotes(new NoteRepository.Callback<List<Note>>() {
                 @Override public void onSuccess(List<Note> notes) {
@@ -334,7 +334,7 @@ public class SettingsActivity extends AppCompatActivity {
         private void uploadImportedNotes(List<JSONObject> notes) {
             showProgressDialog(R.string.progress_importing);
             SupanoteApp app = (SupanoteApp) requireActivity().getApplication();
-            NoteRepository repo = new NoteRepository(app.connection(), app.session());
+            NoteRepository repo = new NoteRepository(app.connection(), app.session(), app.authedHttpClient());
 
             executor.execute(() -> {
                 int succeeded = 0;

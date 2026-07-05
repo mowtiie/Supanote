@@ -33,7 +33,7 @@ public class NoteViewModel extends AndroidViewModel {
     public NoteViewModel(@NonNull Application app) {
         super(app);
         SupanoteApp supanoteApp = (SupanoteApp) app;
-        repo = new NoteRepository(supanoteApp.connection(), supanoteApp.session());
+        repo = new NoteRepository(supanoteApp.connection(), supanoteApp.session(), supanoteApp.authedHttpClient());
     }
 
     private List<Note> currentList() {

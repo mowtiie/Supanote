@@ -21,7 +21,7 @@ public class AuthViewModel extends AndroidViewModel {
     public AuthViewModel(@NonNull Application app) {
         super(app);
         SupanoteApp supanoteApp = (SupanoteApp) app;
-        repo = new AuthRepository(supanoteApp.connection(), supanoteApp.session());
+        repo = new AuthRepository(supanoteApp.connection(), supanoteApp.session(), supanoteApp.httpClient());
     }
 
     public LiveData<Boolean> getLoading()       { return loading; }

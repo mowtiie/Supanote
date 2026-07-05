@@ -25,14 +25,15 @@ public class AuthRepository {
     private static final String API_KEY = BuildConfig.SUPABASE_KEY;
     private static final MediaType JSON = MediaType.get("application/json");
 
-    private final OkHttpClient client = new OkHttpClient();
+    private final OkHttpClient client;
     private final Handler main = new Handler(Looper.getMainLooper());
     private final SessionManager session;
     private final ConnectionManager connection;
 
-    public AuthRepository(ConnectionManager connection, SessionManager session) {
+    public AuthRepository(ConnectionManager connection, SessionManager session, OkHttpClient client) {
         this.session = session;
         this.connection = connection;
+        this.client = client;
     }
 
     public interface Callback {

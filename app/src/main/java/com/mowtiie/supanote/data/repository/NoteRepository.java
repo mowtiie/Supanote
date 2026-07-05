@@ -26,12 +26,10 @@ public class NoteRepository {
     private final OkHttpClient client;
     private final Handler main = new Handler(Looper.getMainLooper());
 
-    public NoteRepository(ConnectionManager connection, SessionManager session) {
+    public NoteRepository(ConnectionManager connection, SessionManager session, OkHttpClient client) {
         this.connection = connection;
         this.session = session;
-        this.client = new OkHttpClient.Builder()
-                .authenticator(new TokenAuthenticator(connection, session))
-                .build();
+        this.client = client;
     }
 
     public interface Callback<T> { void onSuccess(T result); void onError(Exception e); }
