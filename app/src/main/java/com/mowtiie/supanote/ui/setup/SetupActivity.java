@@ -8,7 +8,6 @@ import android.util.Log;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -17,6 +16,7 @@ import com.mowtiie.supanote.BuildConfig;
 import com.mowtiie.supanote.R;
 import com.mowtiie.supanote.SupanoteApp;
 import com.mowtiie.supanote.databinding.ActivitySetupBinding;
+import com.mowtiie.supanote.ui.SupanoteActivity;
 import com.mowtiie.supanote.ui.auth.LoginActivity;
 
 import java.io.IOException;
@@ -28,7 +28,7 @@ import okhttp3.Request;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
 
-public class SetupActivity extends AppCompatActivity {
+public class SetupActivity extends SupanoteActivity {
 
     private ActivitySetupBinding binding;
 

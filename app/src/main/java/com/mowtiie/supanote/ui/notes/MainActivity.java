@@ -12,7 +12,6 @@ import androidx.activity.EdgeToEdge;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SearchView;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
@@ -26,6 +25,7 @@ import com.mowtiie.supanote.SupanoteApp;
 import com.mowtiie.supanote.data.local.CrashReporter;
 import com.mowtiie.supanote.data.model.Note;
 import com.mowtiie.supanote.databinding.ActivityMainBinding;
+import com.mowtiie.supanote.ui.SupanoteActivity;
 import com.mowtiie.supanote.ui.auth.LoginActivity;
 import com.mowtiie.supanote.ui.setup.SettingsActivity;
 import com.mowtiie.supanote.ui.setup.SetupActivity;
@@ -35,7 +35,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 
-public class MainActivity extends AppCompatActivity implements NoteAdapter.OnNoteAction {
+public class MainActivity extends SupanoteActivity implements NoteAdapter.OnNoteAction {
 
     private enum Sort { NEWEST, OLDEST, TITLE_AZ, TITLE_ZA }
 

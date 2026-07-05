@@ -8,7 +8,6 @@ import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.activity.OnBackPressedCallback;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -17,10 +16,11 @@ import androidx.lifecycle.ViewModelProvider;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.mowtiie.supanote.R;
 import com.mowtiie.supanote.databinding.ActivityManageNoteBinding;
+import com.mowtiie.supanote.ui.SupanoteActivity;
 
 import org.jspecify.annotations.NonNull;
 
-public class ManageNoteActivity extends AppCompatActivity {
+public class ManageNoteActivity extends SupanoteActivity {
 
     private ActivityManageNoteBinding binding;
 

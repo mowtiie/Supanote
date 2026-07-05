@@ -5,7 +5,6 @@ import android.os.Bundle;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -14,12 +13,13 @@ import androidx.lifecycle.ViewModelProvider;
 import com.mowtiie.supanote.R;
 import com.mowtiie.supanote.SupanoteApp;
 import com.mowtiie.supanote.databinding.ActivityLoginBinding;
+import com.mowtiie.supanote.ui.SupanoteActivity;
 import com.mowtiie.supanote.ui.notes.MainActivity;
 import com.mowtiie.supanote.ui.setup.SetupActivity;
 
 import java.util.Objects;
 
-public class LoginActivity extends AppCompatActivity {
+public class LoginActivity extends SupanoteActivity {
 
     private ActivityLoginBinding binding;
 
