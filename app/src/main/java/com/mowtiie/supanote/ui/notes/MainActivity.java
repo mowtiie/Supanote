@@ -1,6 +1,7 @@
 package com.mowtiie.supanote.ui.notes;
 
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -8,6 +9,8 @@ import android.view.View;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SearchView;
@@ -20,6 +23,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.mowtiie.supanote.R;
 import com.mowtiie.supanote.SupanoteApp;
+import com.mowtiie.supanote.data.local.CrashReporter;
 import com.mowtiie.supanote.data.model.Note;
 import com.mowtiie.supanote.databinding.ActivityMainBinding;
 import com.mowtiie.supanote.ui.auth.LoginActivity;
@@ -45,6 +49,26 @@ public class MainActivity extends AppCompatActivity implements NoteAdapter.OnNot
 
     private boolean isLoading = false;
     private boolean firstLoadDone = false;
+
+    private final ActivityResultLauncher<Intent> saveCrashLauncher =
+            registerForActivityResult(new ActivityResultContracts.StartActivityForResult(),
+                    result -> {
+                        if (result.getResultCode() != RESULT_OK || result.getData() == null) {
+                            return;
+                        }
+
+                        Uri uri = result.getData().getData();
+                        if (uri == null) {
+                            return;
+                        }
+
+                        if (CrashReporter.writeReportToUri(this, uri)) {
+                            Toast.makeText(this, R.string.toast_crash_save_success, Toast.LENGTH_SHORT).show();
+                            CrashReporter.deleteReport(this);
+                        } else {
+                            Toast.makeText(this, R.string.toast_crash_save_failure, Toast.LENGTH_SHORT).show();
+                        }
+                    });
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -104,6 +128,10 @@ public class MainActivity extends AppCompatActivity implements NoteAdapter.OnNot
 
         if (savedInstanceState == null) {
             noteViewModel.loadNotes();
+        }
+
+        if (savedInstanceState == null) {
+            CrashReporter.showDialogIfPending(this, saveCrashLauncher);
         }
     }
 

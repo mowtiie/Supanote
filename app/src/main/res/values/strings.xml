@@ -30,7 +30,7 @@
     <string name="change_server_confirm_button">Continue</string>
 
     <!-- INTENT EXTRAS -->
-    <string name="extra_crash_email_subject">Centsation crash report</string>
+    <string name="extra_crash_email_subject">Supanote crash report</string>
     <string name="extra_crash_email_chooser_title">Send report via…</string>
 
     <!-- TOASTS -->
