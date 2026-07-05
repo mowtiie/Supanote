@@ -49,5 +49,28 @@
 
         <!-- CUSTOM STYLES -->
         <item name="materialAlertDialogTheme">@style/ThemeOverlay.Material3.MaterialAlertDialog.Centered</item>
+        <item name="popupTheme">@style/Widget.Material3.PopupMenu</item>
+        <item name="alertDialogTheme">@style/Theme.Supanote.AlertDialog</item>
+    </style>
+
+    <style name="Theme.Supanote.MediumContrast" parent="ThemeOverlay.Supanote.MediumContrast">
+        <item name="materialAlertDialogTheme">@style/ThemeOverlay.Material3.MaterialAlertDialog.Centered</item>
+        <item name="popupTheme">@style/Widget.Material3.PopupMenu</item>
+        <item name="alertDialogTheme">@style/Theme.Supanote.AlertDialog</item>
+    </style>
+
+    <style name="Theme.Supanote.HighContrast" parent="ThemeOverlay.Supanote.HighContrast">
+        <item name="materialAlertDialogTheme">@style/ThemeOverlay.Material3.MaterialAlertDialog.Centered</item>
+        <item name="popupTheme">@style/Widget.Material3.PopupMenu</item>
+        <item name="alertDialogTheme">@style/Theme.Supanote.AlertDialog</item>
+    </style>
+
+    <style name="Theme.Supanote.AlertDialog" parent="ThemeOverlay.Material3.MaterialAlertDialog">
+        <item name="backgroundTint">?attr/colorSurfaceContainerHigh</item>
+        <item name="android:textColor">?attr/colorOnSurface</item>
+        <item name="dialogCornerRadius">28dp</item>
+        <item name="buttonBarPositiveButtonStyle">@style/Widget.Material3.Button.TextButton.Dialog</item>
+        <item name="buttonBarNegativeButtonStyle">@style/Widget.Material3.Button.TextButton.Dialog</item>
+        <item name="buttonBarNeutralButtonStyle">@style/Widget.Material3.Button.TextButton.Dialog.Flush</item>
     </style>
 </resources>
