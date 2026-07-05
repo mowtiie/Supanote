@@ -27,6 +27,7 @@ import com.mowtiie.supanote.data.model.Note;
 import com.mowtiie.supanote.databinding.ActivityMainBinding;
 import com.mowtiie.supanote.ui.SupanoteActivity;
 import com.mowtiie.supanote.ui.auth.LoginActivity;
+import com.mowtiie.supanote.ui.settings.AboutActivity;
 import com.mowtiie.supanote.ui.settings.SettingsActivity;
 import com.mowtiie.supanote.ui.setup.SetupActivity;
 
@@ -224,6 +225,11 @@ public class MainActivity extends SupanoteActivity implements NoteAdapter.OnNote
 
         if (id == R.id.menu_item_sort) {
             showSortDialog();
+            return true;
+        }
+
+        if (id == R.id.menu_item_about) {
+            startActivity(new Intent(this, AboutActivity.class));
             return true;
         }
 
