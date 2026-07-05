@@ -15,9 +15,12 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Supanote">
         <activity
-            android:name=".ui.setup.SettingsActivity"
-            android:parentActivityName=".ui.notes.MainActivity"
+            android:name=".ui.notes.ManageNoteActivity"
             android:exported="false" />
+        <activity
+            android:name=".ui.setup.SettingsActivity"
+            android:exported="false"
+            android:parentActivityName=".ui.notes.MainActivity" />
         <activity
             android:name=".ui.auth.LoginActivity"
             android:exported="false" />
