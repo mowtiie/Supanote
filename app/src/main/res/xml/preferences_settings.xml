@@ -19,4 +19,15 @@
             app:iconSpaceReserved="false"/>
     </PreferenceCategory>
 
+    <PreferenceCategory
+        android:title="@string/preferences_config_category"
+        app:iconSpaceReserved="false">
+
+        <Preference
+            android:key="change_server"
+            android:title="@string/preferences_config_change_server"
+            android:summary="@string/preferences_config_change_server_summary"
+            app:iconSpaceReserved="false"/>
+    </PreferenceCategory>
+
 </PreferenceScreen>

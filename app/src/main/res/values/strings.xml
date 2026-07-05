@@ -22,4 +22,9 @@
     <string name="preferences_backup_import_summary">Import your notes</string>
     <string name="preferences_backup_export">Export</string>
     <string name="preferences_backup_export_summary">Export your notes</string>
+
+    <!-- CONFIGURATION PREFERENCES -->
+    <string name="preferences_config_category">Configuration</string>
+    <string name="preferences_config_change_server">Change Server</string>
+    <string name="preferences_config_change_server_summary">Disconnect and connect to a different Supabase project</string>
 </resources>
