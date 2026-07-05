@@ -61,6 +61,11 @@
     <string name="preferences_appearance_contrast">Contrast</string>
     <string name="preferences_appearance_dynamic_colors">Dynamic Colors</string>
     <string name="preferences_appearance_dynamic_colors_summary">Apply colors from your wallpaper to the application theme</string>
+    
+    <!-- SECURITY & PRIVACY PREFERENCES -->
+    <string name="preferences_security_privacy_category">Security &amp; Privacy</string>
+    <string name="preferences_security_privacy_screen">Screen Privacy</string>
+    <string name="preferences_security_privacy_screen_summary">Prevents capturing of screenshots and screen recordings in the app</string>
 
     <!-- BACKUP & RESTORE PREFERENCES -->
     <string name="preferences_backup_category">Backup &amp; Restore</string>
