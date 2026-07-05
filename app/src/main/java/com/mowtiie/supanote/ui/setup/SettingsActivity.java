@@ -15,16 +15,21 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.Nullable;
 import androidx.annotation.StringRes;
 import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatDelegate;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.preference.ListPreference;
 import androidx.preference.Preference;
 import androidx.preference.PreferenceFragmentCompat;
+import androidx.preference.SwitchPreferenceCompat;
 
+import com.google.android.material.color.DynamicColors;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.textview.MaterialTextView;
 import com.mowtiie.supanote.R;
 import com.mowtiie.supanote.SupanoteApp;
+import com.mowtiie.supanote.data.Theme;
 import com.mowtiie.supanote.data.model.Note;
 import com.mowtiie.supanote.data.repository.NoteRepository;
 import com.mowtiie.supanote.databinding.ActivitySettingsBinding;
@@ -98,6 +103,12 @@ public class SettingsActivity extends SupanoteActivity {
         private Preference importNotes;
         private Preference changeServer;
 
+        private ListPreference listContrast;
+        private ListPreference listTheme;
+
+        private SwitchPreferenceCompat switchDynamicColors;
+        private SwitchPreferenceCompat switchScreenPrivacy;
+
         private final ActivityResultLauncher<Intent> exportDataLauncher =
                 registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
                     if (result.getResultCode() == RESULT_OK) {
@@ -122,6 +133,36 @@ public class SettingsActivity extends SupanoteActivity {
         public void onCreatePreferences(@Nullable Bundle savedInstanceState, @Nullable String rootKey) {
             setPreferencesFromResource(R.xml.preferences_settings, rootKey);
             findPreferences();
+
+            listTheme.setOnPreferenceChangeListener((preference, newValue) -> {
+                String selectedTheme = (String) newValue;
+                if (selectedTheme.equals(Theme.SYSTEM.VALUE)) {
+                    AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
+                } else if (selectedTheme.equals(Theme.BATTERY.VALUE)){
+                    AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_AUTO_BATTERY);
+                } else if (selectedTheme.equals(Theme.LIGHT.VALUE)){
+                    AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
+                } else if (selectedTheme.equals(Theme.DARK.VALUE)) {
+                    AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
+                }
+                return true;
+            });
+
+            listContrast.setOnPreferenceChangeListener((preference, newValue) -> {
+                requireActivity().recreate();
+                return true;
+            });
+
+            switchDynamicColors.setVisible(DynamicColors.isDynamicColorAvailable());
+            switchDynamicColors.setOnPreferenceChangeListener((preference, newValue) -> {
+                requireActivity().recreate();
+                return true;
+            });
+
+            switchScreenPrivacy.setOnPreferenceChangeListener((preference, newValue) -> {
+                requireActivity().recreate();
+                return true;
+            });
 
             exportNotes.setOnPreferenceClickListener(preference -> {
                 exportData();
@@ -155,6 +196,10 @@ public class SettingsActivity extends SupanoteActivity {
             exportNotes = findPreference("export");
             importNotes = findPreference("import");
             changeServer = findPreference("change_server");
+            listTheme = findPreference("theme");
+            listContrast = findPreference("contrast");
+            switchDynamicColors = findPreference("dynamic_colors");
+            switchScreenPrivacy = findPreference("screen_privacy");
         }
 
         private void exportData() {
