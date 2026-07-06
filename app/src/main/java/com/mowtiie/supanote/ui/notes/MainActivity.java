@@ -53,6 +53,7 @@ public class MainActivity extends SupanoteActivity implements NoteAdapter.OnNote
 
     private boolean isLoading = false;
     private boolean firstLoadDone = false;
+    private boolean skipNextResumeReload = true;
 
     private final ActivityResultLauncher<Intent> saveCrashLauncher =
             registerForActivityResult(new ActivityResultContracts.StartActivityForResult(),
@@ -217,9 +218,11 @@ public class MainActivity extends SupanoteActivity implements NoteAdapter.OnNote
     @Override
     protected void onResume() {
         super.onResume();
-        if (state == ListState.ERROR) {
-            noteViewModel.loadNotes();
+        if (skipNextResumeReload) {
+            skipNextResumeReload = false;
+            return;
         }
+        noteViewModel.loadNotes();
     }
 
     @Override
