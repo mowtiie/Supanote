@@ -204,7 +204,7 @@ public class SettingsActivity extends SupanoteActivity {
         }
 
         private void exportData() {
-            showProgressDialog(R.string.progress_exporting);
+            showProgressDialog(R.string.dialog_message_progress_exporting);
             Context appContext = requireContext().getApplicationContext();
             SupanoteApp app = (SupanoteApp) requireActivity().getApplication();
             NoteRepository repo = new NoteRepository(app.connection(), app.session(), app.authedHttpClient());
@@ -247,7 +247,7 @@ public class SettingsActivity extends SupanoteActivity {
             List<Note> notes = pendingExport;
             pendingExport = null;
 
-            showProgressDialog(R.string.progress_exporting);
+            showProgressDialog(R.string.dialog_message_progress_exporting);
             Context appContext = requireContext().getApplicationContext();
             executor.execute(() -> {
                 boolean success = performExport(appContext, uri, notes);
@@ -301,7 +301,7 @@ public class SettingsActivity extends SupanoteActivity {
         }
 
         private void importJSON(Uri uri) {
-            showProgressDialog(R.string.progress_importing);
+            showProgressDialog(R.string.dialog_message_progress_importing);
             Context appContext = requireContext().getApplicationContext();
             executor.execute(() -> {
                 List<JSONObject> parsed;
@@ -365,16 +365,15 @@ public class SettingsActivity extends SupanoteActivity {
         private void confirmAndImport(List<JSONObject> notes) {
             if (!isAdded()) return;
             new MaterialAlertDialogBuilder(requireContext())
-                    .setTitle(R.string.import_confirm_title)
-                    .setMessage(getString(R.string.import_confirm_message, notes.size()))
-                    .setPositiveButton(R.string.import_confirm_button,
-                            (d, w) -> uploadImportedNotes(notes))
+                    .setTitle(R.string.dialog_title_import_confirm)
+                    .setMessage(getString(R.string.dialog_message_import_confirm, notes.size()))
+                    .setPositiveButton(R.string.button_import, (d, w) -> uploadImportedNotes(notes))
                     .setNegativeButton(android.R.string.cancel, null)
                     .show();
         }
 
         private void uploadImportedNotes(List<JSONObject> notes) {
-            showProgressDialog(R.string.progress_importing);
+            showProgressDialog(R.string.dialog_message_progress_importing);
             SupanoteApp app = (SupanoteApp) requireActivity().getApplication();
             NoteRepository repo = new NoteRepository(app.connection(), app.session(), app.authedHttpClient());
 
@@ -399,9 +398,9 @@ public class SettingsActivity extends SupanoteActivity {
 
         private void confirmChangeServer() {
             new MaterialAlertDialogBuilder(requireContext())
-                    .setTitle(R.string.change_server_confirm_title)
-                    .setMessage(R.string.change_server_confirm_message)
-                    .setPositiveButton(R.string.change_server_confirm_button, (d, w) -> {
+                    .setTitle(R.string.dialog_title_change_server_confirm)
+                    .setMessage(R.string.dialog_message_change_server_confirm)
+                    .setPositiveButton(R.string.button_changer_server_continue, (d, w) -> {
                         SupanoteApp app = (SupanoteApp) requireActivity().getApplication();
                         app.session().clear();
                         app.connection().clear();

@@ -9,26 +9,6 @@
 
     <string name="helper_server_url">e.g https://yourproject.supabase.co</string>
 
-    <string name="button_connect">Connect</string>
-
-    <string name="toast_export_no_notes">Nothing to export</string>
-    <string name="toast_export_success">Notes exported</string>
-    <string name="toast_export_failed">Export failed</string>
-    <string name="toast_import_success">Imported %1$d notes</string>
-    <string name="toast_import_failed">Import failed</string>
-    <string name="toast_import_invalid_file">That file isn\'t a Supanote backup</string>
-
-    <string name="progress_exporting">Exporting notes\u2026</string>
-    <string name="progress_importing">Importing notes\u2026</string>
-
-    <string name="import_confirm_title">Import notes?</string>
-    <string name="import_confirm_message">%1$d notes from the backup will be added to your account. Existing notes won\'t be changed.</string>
-    <string name="import_confirm_button">Import</string>
-
-    <string name="change_server_confirm_title">Change server?</string>
-    <string name="change_server_confirm_message">You\'ll be signed out and need to reconnect to a server.</string>
-    <string name="change_server_confirm_button">Continue</string>
-
     <!-- INTENT EXTRAS -->
     <string name="extra_crash_email_subject">Supanote crash report</string>
     <string name="extra_crash_email_chooser_title">Send report via…</string>
@@ -37,17 +17,32 @@
     <string name="toast_crash_save_success">Crash report saved</string>
     <string name="toast_crash_save_failure">Couldn\'t save crash report</string>
     <string name="toast_crash_no_email_app">No email app installed</string>
+    <string name="toast_export_no_notes">Nothing to export</string>
+    <string name="toast_export_success">Notes exported</string>
+    <string name="toast_export_failed">Export failed</string>
+    <string name="toast_import_success">Imported %1$d notes</string>
+    <string name="toast_import_failed">Import failed</string>
+    <string name="toast_import_invalid_file">That file isn\'t a Supanote backup</string>
 
     <!-- DIALOG TITLES -->
     <string name="dialog_title_crash">App has crashed</string>
+    <string name="dialog_title_change_server_confirm">Change server?</string>
+    <string name="dialog_title_import_confirm">Import notes?</string>
 
     <!-- DIALOG MESSAGES -->
     <string name="dialog_message_crash">The app closed unexpectedly. You can help fix the issue by emailing the error report or saving it as a text file.</string>
+    <string name="dialog_message_progress_exporting">Exporting notes\u2026</string>
+    <string name="dialog_message_progress_importing">Importing notes\u2026</string>
+    <string name="dialog_message_change_server_confirm">You\'ll be signed out and need to reconnect to a server.</string>
+    <string name="dialog_message_import_confirm">%1$d notes from the backup will be added to your account. Existing notes won\'t be changed.</string>
 
     <!-- BUTTONS -->
     <string name="button_crash_email">Email report</string>
     <string name="button_crash_save">Export to file</string>
     <string name="button_crash_dismiss">Dismiss</string>
+    <string name="button_changer_server_continue">Continue</string>
+    <string name="button_import">Import</string>
+    <string name="button_connect">Connect</string>
 
     <!-- MENU ITEMS -->
     <string name="menu_search">Search</string>
