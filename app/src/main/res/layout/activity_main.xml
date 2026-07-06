@@ -35,6 +35,7 @@
         android:layout_height="wrap_content">
 
         <ImageView
+            android:id="@+id/emptyStateIcon"
             android:importantForAccessibility="no"
             android:src="@drawable/ic_notes"
             android:layout_width="100dp"

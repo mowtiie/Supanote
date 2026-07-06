@@ -12,6 +12,7 @@ import androidx.activity.EdgeToEdge;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
+import androidx.appcompat.content.res.AppCompatResources;
 import androidx.appcompat.widget.SearchView;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
@@ -39,6 +40,8 @@ import java.util.Locale;
 public class MainActivity extends SupanoteActivity implements NoteAdapter.OnNoteAction {
 
     private enum Sort { NEWEST, OLDEST, TITLE_AZ, TITLE_ZA }
+    private enum ListState { LOADING, LOADED_EMPTY, LOADED_WITH_NOTES, ERROR }
+    private ListState state = ListState.LOADING;
 
     private NoteViewModel noteViewModel;
     private NoteAdapter noteAdapter;
@@ -104,23 +107,33 @@ public class MainActivity extends SupanoteActivity implements NoteAdapter.OnNote
         binding.notesRecycler.setAdapter(noteAdapter);
 
         noteViewModel = new ViewModelProvider(this).get(NoteViewModel.class);
+
         noteViewModel.getNotes().observe(this, notes -> {
             allNotes = notes != null ? notes : new ArrayList<>();
+            if (allNotes.isEmpty()) {
+                if (state != ListState.ERROR) state = ListState.LOADED_EMPTY;
+            } else {
+                state = ListState.LOADED_WITH_NOTES;
+            }
             applyView();
         });
+
         noteViewModel.getLoading().observe(this, loading -> {
             isLoading = loading;
             binding.loadingIndicator.setVisibility(loading ? View.VISIBLE : View.GONE);
             if (loading) {
+                state = ListState.LOADING;
                 binding.emptyStateContainer.setVisibility(View.GONE);
             } else {
                 firstLoadDone = true;
                 applyView();
             }
         });
+
         noteViewModel.getError().observe(this, msg -> {
             if (msg != null) {
-                Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
+                if (allNotes.isEmpty()) state = ListState.ERROR;
+                applyView();
                 noteViewModel.clearError();
             }
         });
@@ -171,15 +184,42 @@ public class MainActivity extends SupanoteActivity implements NoteAdapter.OnNote
 
     private String title(Note n) { return n.getTitle() == null ? "" : n.getTitle(); }
 
-    private void updateEmptyState(boolean empty) {
-        if (isLoading || !firstLoadDone || !empty) {
+    private void updateEmptyState(boolean filteredResultEmpty) {
+        if (isLoading || !firstLoadDone) {
             binding.emptyStateContainer.setVisibility(View.GONE);
             return;
         }
-        binding.emptyStateLabel.setVisibility(View.VISIBLE);
-        binding.emptyStateLabel.setText(searchQuery.isEmpty()
-                ? "No notes yet — tap + to add one"
-                : "No notes match \u201C" + searchQuery + "\u201D");
+
+        if (!searchQuery.isEmpty() && filteredResultEmpty && !allNotes.isEmpty()) {
+            binding.emptyStateContainer.setVisibility(View.VISIBLE);
+            binding.emptyStateLabel.setText("No notes match \u201C" + searchQuery + "\u201D");
+            return;
+        }
+
+        if (filteredResultEmpty) {
+            binding.emptyStateContainer.setVisibility(View.VISIBLE);
+            switch (state) {
+                case ERROR:
+                    binding.emptyStateIcon.setImageDrawable(AppCompatResources.getDrawable(this, R.drawable.ic_offline));
+                    binding.emptyStateLabel.setText("You're offline — pull down or reopen to retry when you're back online.");
+                    break;
+                case LOADED_EMPTY:
+                default:
+                    binding.emptyStateIcon.setImageDrawable(AppCompatResources.getDrawable(this, R.drawable.ic_notes));
+                    binding.emptyStateLabel.setText("No notes yet — tap + to add one");
+                    break;
+            }
+        } else {
+            binding.emptyStateContainer.setVisibility(View.GONE);
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (state == ListState.ERROR) {
+            noteViewModel.loadNotes();
+        }
     }
 
     @Override
