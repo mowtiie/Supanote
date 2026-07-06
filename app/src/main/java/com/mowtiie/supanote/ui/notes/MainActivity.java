@@ -193,7 +193,7 @@ public class MainActivity extends SupanoteActivity implements NoteAdapter.OnNote
 
         if (!searchQuery.isEmpty() && filteredResultEmpty && !allNotes.isEmpty()) {
             binding.emptyStateContainer.setVisibility(View.VISIBLE);
-            binding.emptyStateLabel.setText("No notes match \u201C" + searchQuery + "\u201D");
+            binding.emptyStateLabel.setText(String.format(getString(R.string.label_list_empty_search), searchQuery));
             return;
         }
 
@@ -202,12 +202,12 @@ public class MainActivity extends SupanoteActivity implements NoteAdapter.OnNote
             switch (state) {
                 case ERROR:
                     binding.emptyStateIcon.setImageDrawable(AppCompatResources.getDrawable(this, R.drawable.ic_offline));
-                    binding.emptyStateLabel.setText("You're offline right now. Reopen to retry when you're back online.");
+                    binding.emptyStateLabel.setText(R.string.label_list_offline);
                     break;
                 case LOADED_EMPTY:
                 default:
                     binding.emptyStateIcon.setImageDrawable(AppCompatResources.getDrawable(this, R.drawable.ic_notes));
-                    binding.emptyStateLabel.setText("No notes yet — tap + to add one");
+                    binding.emptyStateLabel.setText(R.string.label_list_empty);
                     break;
             }
         } else {
@@ -292,15 +292,15 @@ public class MainActivity extends SupanoteActivity implements NoteAdapter.OnNote
     }
 
     private void showSortDialog() {
-        String[] labels = { "Newest first", "Oldest first", "Title (A\u2013Z)", "Title (Z\u2013A)" };
+        String[] labels = { "Newest first", "Oldest first", "Title (A-Z)", "Title (Z-A)" };
         new MaterialAlertDialogBuilder(this)
-                .setTitle("Sort by")
+                .setTitle(R.string.dialog_title_sort)
                 .setSingleChoiceItems(labels, sortMode.ordinal(), (d, which) -> {
                     sortMode = Sort.values()[which];
                     applyView();
                     d.dismiss();
                 })
-                .setNegativeButton("Cancel", null)
+                .setNegativeButton(R.string.button_cancel, null)
                 .show();
     }
 }

@@ -1,13 +1,17 @@
 <resources>
     <string name="app_name">Supanote</string>
 
-    <string name="server_setup_heading">Server Setup</string>
-    <string name="server_setup_description">Create a free Supabase project, run the setup SQL from the README, then paste your Project URL and anon (publishable) key below.</string>
-
     <string name="hint_server_url">Server Url</string>
     <string name="hint_server_publishable_key">Publishable Key</string>
 
     <string name="helper_server_url">e.g https://yourproject.supabase.co</string>
+
+    <!-- LABELS -->
+    <string name="label_server_setup_heading">Server Setup</string>
+    <string name="label_server_setup_description">Create a free Supabase project, run the setup SQL from the README, then paste your Project URL and anon (publishable) key below.</string>
+    <string name="label_list_offline">You are offline right now. Reopen to retry when you are back online.</string>
+    <string name="label_list_empty">No notes yet — tap + to add one</string>
+    <string name="label_list_empty_search">No notes match "%s"</string>
 
     <!-- INTENT EXTRAS -->
     <string name="extra_crash_email_subject">Supanote crash report</string>
@@ -28,6 +32,7 @@
     <string name="dialog_title_crash">App has crashed</string>
     <string name="dialog_title_change_server_confirm">Change server?</string>
     <string name="dialog_title_import_confirm">Import notes?</string>
+    <string name="dialog_title_sort">Sort by</string>
 
     <!-- DIALOG MESSAGES -->
     <string name="dialog_message_crash">The app closed unexpectedly. You can help fix the issue by emailing the error report or saving it as a text file.</string>
@@ -43,6 +48,7 @@
     <string name="button_changer_server_continue">Continue</string>
     <string name="button_import">Import</string>
     <string name="button_connect">Connect</string>
+    <string name="button_cancel">Cancel</string>
 
     <!-- MENU ITEMS -->
     <string name="menu_search">Search</string>

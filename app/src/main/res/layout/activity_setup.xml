@@ -21,7 +21,7 @@
         android:layout_height="wrap_content">
 
         <com.google.android.material.textview.MaterialTextView
-            android:text="@string/server_setup_heading"
+            android:text="@string/label_server_setup_heading"
             android:textAppearance="?attr/textAppearanceDisplayMedium"
             android:textAlignment="center"
             android:textColor="?attr/colorOnSurface"
@@ -31,7 +31,7 @@
             android:layout_height="wrap_content"/>
 
         <com.google.android.material.textview.MaterialTextView
-            android:text="@string/server_setup_description"
+            android:text="@string/label_server_setup_description"
             android:textAppearance="?attr/textAppearanceTitleMedium"
             android:fontFamily="sans-serif"
             android:textColor="?attr/colorOnSurfaceVariant"
