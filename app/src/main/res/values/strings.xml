@@ -6,6 +6,10 @@
 
     <string name="helper_server_url">e.g https://yourproject.supabase.co</string>
 
+    <!-- TOOLBAR TITLES -->
+    <string name="toolbar_title_about">About</string>
+    <string name="toolbar_title_settings">Settings</string>
+
     <!-- LABELS -->
     <string name="label_server_setup_heading">Server Setup</string>
     <string name="label_server_setup_description">Create a free Supabase project, run the setup SQL from the README, then paste your Project URL and anon (publishable) key below.</string>
