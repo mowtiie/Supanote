@@ -38,8 +38,8 @@
             android:id="@+id/emptyStateIcon"
             android:importantForAccessibility="no"
             android:src="@drawable/ic_notes"
-            android:layout_width="150dp"
-            android:layout_height="150dp"
+            android:layout_width="125dp"
+            android:layout_height="125dp"
             app:tint="?attr/colorTertiary" />
 
         <com.google.android.material.textview.MaterialTextView
@@ -48,10 +48,10 @@
             android:layout_height="wrap_content"
             android:textAlignment="center"
             android:paddingHorizontal="36dp"
-            android:layout_marginTop="12dp"
+            android:layout_marginTop="8dp"
             android:textAppearance="?attr/textAppearanceBodyLarge"
             android:textColor="?attr/colorOnSurfaceVariant"
-            android:fontFamily="serif"/>
+            android:fontFamily="sans-serif-medium"/>
     </LinearLayout>
 
     <LinearLayout
@@ -71,7 +71,7 @@
             android:textAppearance="?attr/textAppearanceBodyLarge"
             android:textColor="?attr/colorOnSurface"
             android:layout_marginTop="12dp"
-            android:fontFamily="serif"
+            android:fontFamily="sans-serif-medium"
             android:textAlignment="center"
             android:text="Loading notes..."
             android:layout_width="wrap_content"

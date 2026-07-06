@@ -202,7 +202,7 @@ public class MainActivity extends SupanoteActivity implements NoteAdapter.OnNote
             switch (state) {
                 case ERROR:
                     binding.emptyStateIcon.setImageDrawable(AppCompatResources.getDrawable(this, R.drawable.ic_offline));
-                    binding.emptyStateLabel.setText("You're offline — pull down or reopen to retry when you're back online.");
+                    binding.emptyStateLabel.setText("You're offline right now. Reopen to retry when you're back online.");
                     break;
                 case LOADED_EMPTY:
                 default:
