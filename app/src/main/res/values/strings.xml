@@ -1,6 +1,7 @@
 <resources>
     <string name="app_name">Supanote</string>
 
+    <string name="hint_search_notes">Search notes</string>
     <string name="hint_server_url">Server Url</string>
     <string name="hint_server_publishable_key">Publishable Key</string>
 

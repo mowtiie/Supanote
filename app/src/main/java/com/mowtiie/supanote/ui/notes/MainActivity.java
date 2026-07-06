@@ -241,7 +241,7 @@ public class MainActivity extends SupanoteActivity implements NoteAdapter.OnNote
         MenuItem searchItem = menu.findItem(R.id.menu_item_search);
         SearchView searchView = (SearchView) searchItem.getActionView();
         if (searchView != null) {
-            searchView.setQueryHint("Search notes");
+            searchView.setQueryHint(getString(R.string.hint_search_notes));
             searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
                 @Override public boolean onQueryTextSubmit(String query) { return false; }
                 @Override public boolean onQueryTextChange(String newText) {
