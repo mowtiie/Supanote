@@ -76,7 +76,7 @@ public class LoginActivity extends SupanoteActivity {
         String password = Objects.requireNonNull(binding.passwordInput.getText()).toString().trim();
 
         if (email.isEmpty() || password.isEmpty()) {
-            Toast.makeText(this, "Enter email and password", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, R.string.toast_email_password_required, Toast.LENGTH_SHORT).show();
             return;
         }
         if (isSignUp) {

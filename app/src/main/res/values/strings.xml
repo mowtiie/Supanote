@@ -41,6 +41,7 @@
     <string name="toast_server_url_not_reached">Could not reach that server. Please check the URL.</string>
     <string name="toast_key_rejected">Key rejected ("%d"): %s</string>
     <string name="toast_note_save_failed">Could not save, try again later.</string>
+    <string name="toast_email_password_required">Enter email and password</string>
 
     <!-- DIALOG TITLES -->
     <string name="dialog_title_crash">App has crashed</string>
