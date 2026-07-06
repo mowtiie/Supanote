@@ -4,7 +4,6 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
-import android.util.Log;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
@@ -72,12 +71,12 @@ public class SetupActivity extends SupanoteActivity {
         if (url.endsWith("/")) url = url.substring(0, url.length() - 1);
 
         if (url.isEmpty() || key.isEmpty()) {
-            Toast.makeText(this, "Enter both the server URL and anon key", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, R.string.toast_server_url_anon_key_required, Toast.LENGTH_SHORT).show();
             return;
         }
 
         if (!url.startsWith("http://") && !url.startsWith("https://")) {
-            Toast.makeText(this, "URL must start with http:// or https://", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, R.string.toast_server_url_scheme_required, Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -95,7 +94,7 @@ public class SetupActivity extends SupanoteActivity {
             @Override public void onFailure(Call call, IOException e) {
                 main.post(() -> {
                     setLoading(false);
-                    Toast.makeText(SetupActivity.this, "Couldn't reach that server. Check the URL.", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(SetupActivity.this, R.string.toast_server_url_not_reached, Toast.LENGTH_SHORT).show();
                 });
             }
             @Override public void onResponse(Call call, Response res) {
@@ -106,8 +105,7 @@ public class SetupActivity extends SupanoteActivity {
                 main.post(() -> {
                     setLoading(false);
                     if (code == 401 || code == 403) {
-                        Toast.makeText(SetupActivity.this, "Key rejected (" + code + "): " + shorten(fBody), Toast.LENGTH_SHORT).show();
-                        Log.d("SETUP ACTIVITY", "Key rejected (" + code + "): " + shorten(fBody));
+                        Toast.makeText(SetupActivity.this, String.format(getString(R.string.toast_key_rejected), code, shorten(fBody)), Toast.LENGTH_SHORT).show();
                     } else {
                         ((SupanoteApp) getApplication()).connection().save(fUrl, fKey);
                         goToLogin();
@@ -117,10 +115,12 @@ public class SetupActivity extends SupanoteActivity {
         });
     }
 
-    private String shorten(String s) {
-        if (s == null) return "";
-        s = s.trim();
-        return s.length() > 120 ? s.substring(0, 120) + "…" : s;
+    private String shorten(String string) {
+        if (string == null) {
+            return "";
+        }
+        string = string.trim();
+        return string.length() > 120 ? string.substring(0, 120) + "…" : string;
     }
 
     private void setLoading(boolean loading) {

@@ -27,6 +27,10 @@
     <string name="toast_import_success">Imported %1$d notes</string>
     <string name="toast_import_failed">Import failed</string>
     <string name="toast_import_invalid_file">That file isn\'t a Supanote backup</string>
+    <string name="toast_server_url_anon_key_required">Enter both the server URL and anon key</string>
+    <string name="toast_server_url_scheme_required">URL must start with http:// or https://</string>
+    <string name="toast_server_url_not_reached">Could not reach that server. Please check the URL.</string>
+    <string name="toast_key_rejected">Key rejected ("%d"): %s</string>
 
     <!-- DIALOG TITLES -->
     <string name="dialog_title_crash">App has crashed</string>
