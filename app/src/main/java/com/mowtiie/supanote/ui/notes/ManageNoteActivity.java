@@ -34,6 +34,7 @@ public class ManageNoteActivity extends SupanoteActivity {
     private String originalTitle = "";
     private String originalContent = "";
 
+    private boolean saving = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -105,7 +106,21 @@ public class ManageNoteActivity extends SupanoteActivity {
         return super.onOptionsItemSelected(item);
     }
 
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        menu.findItem(R.id.menu_item_save).setEnabled(!saving);
+        MenuItem del = menu.findItem(R.id.menu_item_delete);
+
+        if (del != null) {
+            del.setEnabled(!saving);
+        }
+
+        return super.onPrepareOptionsMenu(menu);
+    }
+
     private void saveNote() {
+        if (saving) return;
+
         String title = binding.noteInputTitle.getText() == null ? "" : binding.noteInputTitle.getText().toString().trim();
         String content = binding.noteInputContent.getText() == null ? "" : binding.noteInputContent.getText().toString().trim();
 
@@ -115,12 +130,27 @@ public class ManageNoteActivity extends SupanoteActivity {
             return;
         }
 
+        setSaving(true);
+
+        NoteViewModel.CompletionCallback onDone = success -> {
+            setSaving(false);
+            if (success) {
+                finish();
+            } else {
+                Toast.makeText(this, "Couldn't save — try again", Toast.LENGTH_LONG).show();
+            }
+        };
+
         if (noteId == -1L) {
-            noteViewModel.addNote(title, content);
+            noteViewModel.addNoteAndAwait(title, content, onDone);
         } else {
-            noteViewModel.updateNote(noteId, title, content);
+            noteViewModel.updateNoteAndAwait(noteId, title, content, onDone);
         }
-        finish();
+    }
+
+    private void setSaving(boolean value) {
+        saving = value;
+        invalidateOptionsMenu();
     }
 
     private void confirmDelete() {
