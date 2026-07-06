@@ -6,9 +6,13 @@
 
     <string name="helper_server_url">e.g https://yourproject.supabase.co</string>
 
+    <string name="error_note_empty_title">Title cannot be empty</string>
+
     <!-- TOOLBAR TITLES -->
     <string name="toolbar_title_about">About</string>
     <string name="toolbar_title_settings">Settings</string>
+    <string name="toolbar_title_note_edit">Edit note</string>
+    <string name="toolbar_title_note_new">New note</string>
 
     <!-- LABELS -->
     <string name="label_server_setup_heading">Server Setup</string>
@@ -35,12 +39,15 @@
     <string name="toast_server_url_scheme_required">URL must start with http:// or https://</string>
     <string name="toast_server_url_not_reached">Could not reach that server. Please check the URL.</string>
     <string name="toast_key_rejected">Key rejected ("%d"): %s</string>
+    <string name="toast_note_save_failed">Could not save, try again later.</string>
 
     <!-- DIALOG TITLES -->
     <string name="dialog_title_crash">App has crashed</string>
     <string name="dialog_title_change_server_confirm">Change server?</string>
     <string name="dialog_title_import_confirm">Import notes?</string>
     <string name="dialog_title_sort">Sort by</string>
+    <string name="dialog_title_note_delete">Delete note?</string>
+    <string name="dialog_title_note_discard_changes">Discard changes?</string>
 
     <!-- DIALOG MESSAGES -->
     <string name="dialog_message_crash">The app closed unexpectedly. You can help fix the issue by emailing the error report or saving it as a text file.</string>
@@ -48,6 +55,8 @@
     <string name="dialog_message_progress_importing">Importing notes\u2026</string>
     <string name="dialog_message_change_server_confirm">You\'ll be signed out and need to reconnect to a server.</string>
     <string name="dialog_message_import_confirm">%1$d notes from the backup will be added to your account. Existing notes won\'t be changed.</string>
+    <string name="dialog_message_note_delete">This note will be deleted.</string>
+    <string name="dialog_message_note_discard_changes">Your changes won\'t be saved.</string>
 
     <!-- BUTTONS -->
     <string name="button_crash_email">Email report</string>
@@ -57,6 +66,9 @@
     <string name="button_import">Import</string>
     <string name="button_connect">Connect</string>
     <string name="button_cancel">Cancel</string>
+    <string name="button_delete">Delete</string>
+    <string name="button_keep_editing">Keep editing</string>
+    <string name="button_discard">Discard</string>
 
     <!-- MENU ITEMS -->
     <string name="menu_search">Search</string>

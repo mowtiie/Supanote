@@ -70,11 +70,11 @@ public class ManageNoteActivity extends SupanoteActivity {
             if (originalTitle == null) originalTitle = "";
             if (originalContent == null) originalContent = "";
 
-            setTitle("Edit note");
+            setTitle(R.string.toolbar_title_note_edit);
             binding.noteInputTitle.setText(originalTitle);
             binding.noteInputContent.setText(originalContent);
         } else {
-            setTitle("New note");
+            setTitle(R.string.toolbar_title_note_new);
             binding.noteInputTitle.requestFocus();
         }
 
@@ -125,7 +125,7 @@ public class ManageNoteActivity extends SupanoteActivity {
         String content = binding.noteInputContent.getText() == null ? "" : binding.noteInputContent.getText().toString().trim();
 
         if (title.isEmpty()) {
-            binding.noteInputTitle.setError("Title can't be empty");
+            binding.noteInputTitle.setError(getString(R.string.error_note_empty_title));
             binding.noteInputTitle.requestFocus();
             return;
         }
@@ -137,7 +137,7 @@ public class ManageNoteActivity extends SupanoteActivity {
             if (success) {
                 finish();
             } else {
-                Toast.makeText(this, "Couldn't save — try again", Toast.LENGTH_LONG).show();
+                Toast.makeText(this, R.string.toast_note_save_failed, Toast.LENGTH_LONG).show();
             }
         };
 
@@ -155,24 +155,24 @@ public class ManageNoteActivity extends SupanoteActivity {
 
     private void confirmDelete() {
         new MaterialAlertDialogBuilder(this)
-                .setTitle("Delete note?")
-                .setMessage(originalTitle.isEmpty() ? "This note will be deleted." : originalTitle)
-                .setPositiveButton("Delete", (d, w) -> {
+                .setTitle(R.string.dialog_title_note_delete)
+                .setMessage(originalTitle.isEmpty() ? getString(R.string.dialog_message_note_delete) : originalTitle)
+                .setPositiveButton(R.string.button_delete, (d, w) -> {
                     if (noteId != -1L) {
                         noteViewModel.deleteNote(noteId);
                     }
                     finish();
                 })
-                .setNegativeButton("Cancel", null)
+                .setNegativeButton(R.string.button_cancel, null)
                 .show();
     }
 
     private void confirmDiscard() {
         new MaterialAlertDialogBuilder(this)
-                .setTitle("Discard changes?")
-                .setMessage("Your changes won't be saved.")
-                .setPositiveButton("Discard", (d, w) -> finish())
-                .setNegativeButton("Keep editing", null)
+                .setTitle(R.string.dialog_title_note_discard_changes)
+                .setMessage(R.string.dialog_message_note_discard_changes)
+                .setPositiveButton(R.string.button_discard, (d, w) -> finish())
+                .setNegativeButton(R.string.button_keep_editing, null)
                 .show();
     }
 
