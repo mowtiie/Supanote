@@ -58,6 +58,47 @@ public class NoteViewModel extends AndroidViewModel {
         });
     }
 
+    public interface CompletionCallback {
+        void onComplete(boolean success);
+    }
+
+    public void addNoteAndAwait(String title, String content, CompletionCallback cb) {
+        repo.addNote(title, content, new NoteRepository.Callback<Note>() {
+            @Override public void onSuccess(Note note) {
+                loadNotes();
+                cb.onComplete(true);
+            }
+            @Override public void onError(Exception e) {
+                error.setValue(friendlyError(e));
+                cb.onComplete(false);
+            }
+        });
+    }
+
+    public void updateNoteAndAwait(long id, String title, String content, CompletionCallback cb) {
+        repo.updateNote(id, title, content, new NoteRepository.Callback<Note>() {
+            @Override public void onSuccess(Note note) {
+                loadNotes();
+                cb.onComplete(true);
+            }
+            @Override public void onError(Exception e) {
+                error.setValue(friendlyError(e));
+                cb.onComplete(false);
+            }
+        });
+    }
+
+    private String friendlyError(Exception e) {
+        if (e instanceof java.net.UnknownHostException
+                || e instanceof java.net.ConnectException
+                || e instanceof java.net.SocketTimeoutException
+                || e instanceof java.io.InterruptedIOException) {
+            return "Can't reach the server — check your connection.";
+        }
+        String message = e.getMessage();
+        return message == null ? "Something went wrong." : message;
+    }
+
     public void addNote(String title, String content) {
         repo.addNote(title, content, new NoteRepository.Callback<Note>() {
             @Override public void onSuccess(Note note) {
