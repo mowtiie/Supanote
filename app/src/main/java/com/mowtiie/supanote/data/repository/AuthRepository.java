@@ -21,8 +21,6 @@ import okhttp3.ResponseBody;
 
 public class AuthRepository {
 
-    private static final String AUTH = BuildConfig.SUPABASE_URL + "/auth/v1/";
-    private static final String API_KEY = BuildConfig.SUPABASE_KEY;
     private static final MediaType JSON = MediaType.get("application/json");
 
     private final OkHttpClient client;
@@ -59,7 +57,7 @@ public class AuthRepository {
 
         Request req = new Request.Builder()
                 .url(url)
-                .addHeader("apikey", API_KEY)
+                .addHeader("apikey", connection.getAnonKey())
                 .addHeader("Content-Type", "application/json")
                 .post(RequestBody.create(body.toString(), JSON))
                 .build();
