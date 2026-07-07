@@ -20,7 +20,7 @@
 
     <!-- LABELS -->
     <string name="label_server_setup_heading">Server Setup</string>
-    <string name="label_server_setup_description">Create a free Supabase project, run the setup SQL from the README, then paste your Project URL and anon (publishable) key below.</string>
+    <string name="label_server_setup_description">Create a free Supabase project, run the setup SQL from the README, then paste your Project URL and anon key below.</string>
     <string name="label_list_offline">You are offline right now. Reopen to retry when you are back online.</string>
     <string name="label_list_empty">No notes yet — tap + to add one</string>
     <string name="label_list_empty_search">No notes match "%s"</string>
