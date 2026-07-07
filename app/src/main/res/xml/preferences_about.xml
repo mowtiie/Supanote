@@ -3,10 +3,12 @@
 
     <Preference
         android:key="app_license"
+        android:icon="@drawable/ic_license"
         android:title="@string/preferences_app_license"
         android:summary="@string/app_license"/>
 
     <Preference
+        android:icon="@drawable/ic_source_code"
         android:title="@string/preference_app_source_code"
         android:summary="@string/preference_app_source_code_summary">
 
@@ -16,6 +18,7 @@
     </Preference>
 
     <Preference
+        android:icon="@drawable/ic_donate"
         android:title="@string/preference_support"
         android:summary="@string/preference_support_summary">
 
@@ -25,7 +28,7 @@
     </Preference>
 
     <Preference
-        android:key="app_author"
+        android:icon="@drawable/ic_author"
         android:title="@string/preference_app_author"
         android:summary="@string/app_author">
 
@@ -36,6 +39,7 @@
 
     <Preference
         android:key="app_version"
+        android:icon="@drawable/ic_info"
         android:title="@string/preferences_app_version"/>
 
 </androidx.preference.PreferenceScreen>
