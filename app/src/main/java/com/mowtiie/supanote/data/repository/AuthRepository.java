@@ -46,9 +46,12 @@ public class AuthRepository {
         post(connection.getBaseUrl() + "/auth/v1/token?grant_type=password", email, password, cb);
     }
 
-    public void signOut() { session.clear(); }
-
     private void post(String url, String email, String password, Callback cb) {
+        if (connection.getAnonKey() == null || connection.getAnonKey().isEmpty()) {
+            cb.onError("Connection isn't set up. Please reconnect to your server.");
+            return;
+        }
+
         JSONObject body = new JSONObject();
         try {
             body.put("email", email);

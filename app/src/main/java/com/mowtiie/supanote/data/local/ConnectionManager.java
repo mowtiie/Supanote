@@ -15,14 +15,22 @@ public class ConnectionManager {
     }
 
     public void save(String baseUrl, String anonKey) {
-        String url = baseUrl.trim();
+        String url = baseUrl == null ? "" : baseUrl.trim();
         if (url.endsWith("/")) {
             url = url.substring(0, url.length() - 1);
         }
+        String key = anonKey == null ? "" : anonKey.trim();
+
         prefs.edit()
                 .putString(BASE_URL, url)
-                .putString(ANON_KEY, anonKey.trim())
+                .putString(ANON_KEY, key)
                 .apply();
+    }
+
+    public boolean isConfigured() {
+        String url = getBaseUrl();
+        String key = getAnonKey();
+        return url != null && !url.isEmpty() && key != null && !key.isEmpty();
     }
 
     public String getBaseUrl() {
@@ -31,10 +39,6 @@ public class ConnectionManager {
 
     public String getAnonKey() {
         return prefs.getString(ANON_KEY, null);
-    }
-
-    public boolean isConfigured() {
-        return getBaseUrl() != null && getAnonKey() != null;
     }
 
     public void clear() {
