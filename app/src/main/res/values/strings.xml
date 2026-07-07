@@ -3,6 +3,7 @@
     <string name="app_license">GNU General Public License v3.0</string>
     <string name="app_author">mowtiie</string>
     <string name="app_easter_egg">You came here to check if there was something?</string>
+    <string name="app_slogan">Your notes. Your server. Your rules.</string>
 
     <string name="hint_search_notes">Search notes</string>
     <string name="hint_server_url">Server Url</string>
