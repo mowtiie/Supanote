@@ -2,6 +2,7 @@
     <string name="app_name">Supanote</string>
     <string name="app_license">GNU General Public License v3.0</string>
     <string name="app_author">mowtiie</string>
+    <string name="app_easter_egg">You came here to check if there was something?</string>
 
     <string name="hint_search_notes">Search notes</string>
     <string name="hint_server_url">Server Url</string>
@@ -73,6 +74,7 @@
     <string name="button_delete">Delete</string>
     <string name="button_keep_editing">Keep editing</string>
     <string name="button_discard">Discard</string>
+    <string name="button_close">Close</string>
 
     <!-- MENU ITEMS -->
     <string name="menu_search">Search</string>
