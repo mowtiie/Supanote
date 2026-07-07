@@ -1,5 +1,7 @@
 <resources>
     <string name="app_name">Supanote</string>
+    <string name="app_license">GNU General Public License v3.0</string>
+    <string name="app_author">mowtiie</string>
 
     <string name="hint_search_notes">Search notes</string>
     <string name="hint_server_url">Server Url</string>
@@ -102,4 +104,13 @@
     <string name="preferences_config_category">Configuration</string>
     <string name="preferences_config_change_server">Change Server</string>
     <string name="preferences_config_change_server_summary">Disconnect and connect to a different Supabase project</string>
+
+    <!-- ABOUT PREFERENCES -->
+    <string name="preferences_app_version">Version</string>
+    <string name="preferences_app_license">License</string>
+    <string name="preference_app_source_code">Source Code</string>
+    <string name="preference_app_source_code_summary">Check the Github repository and the README</string>
+    <string name="preference_support">Support the developer</string>
+    <string name="preference_support_summary">If you enjoy using Centsation, you can support its development</string>
+    <string name="preference_app_author">Author</string>
 </resources>
