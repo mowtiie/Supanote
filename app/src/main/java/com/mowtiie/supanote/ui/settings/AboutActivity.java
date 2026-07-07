@@ -45,7 +45,7 @@ public class AboutActivity extends AppCompatActivity {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         }
 
-        if (savedInstanceState != null) {
+        if (savedInstanceState == null) {
             getSupportFragmentManager()
                     .beginTransaction()
                     .replace(R.id.about_container, new AboutFragment())
@@ -70,24 +70,31 @@ public class AboutActivity extends AppCompatActivity {
             try {
                 PackageManager packageManager = requireContext().getPackageManager();
                 PackageInfo packageInfo = packageManager.getPackageInfo(requireContext().getPackageName(), 0);
-                appVersion.setSummary(packageInfo.versionName);
+
+                if (appVersion != null) {
+                    appVersion.setSummary(packageInfo.versionName);
+                }
             } catch (PackageManager.NameNotFoundException e) {
                 Toast.makeText(requireContext(), e.getMessage(), Toast.LENGTH_SHORT).show();
             }
 
-            appVersion.setOnPreferenceClickListener(preference -> {
-                easterEggCounter++;
-                if (easterEggCounter == 7) {
-                    String easterEggMessage = getString(R.string.app_easter_egg);
-                    Toast.makeText(requireContext(), easterEggMessage, Toast.LENGTH_SHORT).show();
-                }
-                return true;
-            });
+            if (appVersion != null) {
+                appVersion.setOnPreferenceClickListener(preference -> {
+                    easterEggCounter++;
+                    if (easterEggCounter == 7) {
+                        String easterEggMessage = getString(R.string.app_easter_egg);
+                        Toast.makeText(requireContext(), easterEggMessage, Toast.LENGTH_SHORT).show();
+                    }
+                    return true;
+                });
+            }
 
-            appLicense.setOnPreferenceClickListener(preference -> {
-                showLicenseDialog();
-                return true;
-            });
+            if (appLicense != null) {
+                appLicense.setOnPreferenceClickListener(preference -> {
+                    showLicenseDialog();
+                    return true;
+                });
+            }
         }
 
         private void showLicenseDialog() {
