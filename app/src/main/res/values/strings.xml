@@ -59,10 +59,10 @@
     <string name="dialog_message_crash">The app closed unexpectedly. You can help fix the issue by emailing the error report or saving it as a text file.</string>
     <string name="dialog_message_progress_exporting">Exporting notes\u2026</string>
     <string name="dialog_message_progress_importing">Importing notes\u2026</string>
-    <string name="dialog_message_change_server_confirm">You\'ll be signed out and need to reconnect to a server.</string>
-    <string name="dialog_message_import_confirm">%1$d notes from the backup will be added to your account. Existing notes won\'t be changed.</string>
-    <string name="dialog_message_note_delete">This note will be deleted.</string>
-    <string name="dialog_message_note_discard_changes">Your changes won\'t be saved.</string>
+    <string name="dialog_message_change_server_confirm">You will be signed out and need to reconnect to a server. Click continue to proceed.</string>
+    <string name="dialog_message_import_confirm">%1$d notes from the backup will be added to your account. Existing notes would not be changed.</string>
+    <string name="dialog_message_note_delete">This will permanently delete the note. Click delete to proceed.</string>
+    <string name="dialog_message_note_discard_changes">Your changes would not be saved. Click discard to proceed.</string>
 
     <!-- BUTTONS -->
     <string name="button_crash_email">Email report</string>
