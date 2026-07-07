@@ -113,6 +113,6 @@
     <string name="preference_app_source_code">Source Code</string>
     <string name="preference_app_source_code_summary">Check the Github repository and the README</string>
     <string name="preference_support">Support the developer</string>
-    <string name="preference_support_summary">If you enjoy using Centsation, you can support its development</string>
+    <string name="preference_support_summary">If you enjoy using Supanote, you can support its development</string>
     <string name="preference_app_author">Author</string>
 </resources>
