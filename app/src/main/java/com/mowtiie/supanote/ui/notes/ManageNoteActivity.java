@@ -156,7 +156,7 @@ public class ManageNoteActivity extends SupanoteActivity {
     private void confirmDelete() {
         new MaterialAlertDialogBuilder(this)
                 .setTitle(R.string.dialog_title_note_delete)
-                .setMessage(originalTitle.isEmpty() ? getString(R.string.dialog_message_note_delete) : originalTitle)
+                .setMessage(R.string.dialog_message_note_delete)
                 .setPositiveButton(R.string.button_delete, (d, w) -> {
                     if (noteId != -1L) {
                         noteViewModel.deleteNote(noteId);
