@@ -4,6 +4,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.util.JsonReader;
+import android.util.JsonToken;
+import android.util.JsonWriter;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -41,9 +44,11 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
@@ -261,31 +266,31 @@ public class SettingsActivity extends SupanoteActivity {
         }
 
         private boolean performExport(Context context, Uri uri, List<Note> notes) {
-            try {
-                JSONObject root = new JSONObject();
-                root.put(KEY_VERSION, BACKUP_VERSION);
-                root.put(KEY_EXPORTED_AT, System.currentTimeMillis());
+            // Streamed note by note so the whole backup never has to exist as one string in memory.
+            try (OutputStream out = context.getContentResolver().openOutputStream(uri)) {
+                if (out == null) {
+                    Log.e(TAG_EXPORT, "openOutputStream returned null for " + uri);
+                    return false;
+                }
 
-                JSONArray notesArray = new JSONArray();
+                JsonWriter writer = new JsonWriter(new BufferedWriter(new OutputStreamWriter(out, StandardCharsets.UTF_8)));
+                writer.setIndent("  ");
+                writer.beginObject();
+                writer.name(KEY_VERSION).value(BACKUP_VERSION);
+                writer.name(KEY_EXPORTED_AT).value(System.currentTimeMillis());
+                writer.name(KEY_NOTES).beginArray();
                 for (Note note : notes) {
-                    JSONObject noteObject = new JSONObject();
-                    noteObject.put(KEY_TITLE, note.getTitle());
-                    noteObject.put(KEY_CONTENT,
-                            note.getContent() == null ? "" : note.getContent());
+                    writer.beginObject();
+                    writer.name(KEY_TITLE).value(note.getTitle() == null ? "" : note.getTitle());
+                    writer.name(KEY_CONTENT).value(note.getContent() == null ? "" : note.getContent());
                     if (note.getCreatedAt() != null) {
-                        noteObject.put(KEY_CREATED_AT, note.getCreatedAt());
+                        writer.name(KEY_CREATED_AT).value(note.getCreatedAt());
                     }
-                    notesArray.put(noteObject);
+                    writer.endObject();
                 }
-                root.put(KEY_NOTES, notesArray);
-
-                try (OutputStream out = context.getContentResolver().openOutputStream(uri)) {
-                    if (out == null) {
-                        Log.e(TAG_EXPORT, "openOutputStream returned null for " + uri);
-                        return false;
-                    }
-                    out.write(root.toString(2).getBytes(StandardCharsets.UTF_8));
-                }
+                writer.endArray();
+                writer.endObject();
+                writer.flush();
                 return true;
             } catch (Exception e) {
                 Log.e(TAG_EXPORT, "Export failed", e);
@@ -336,30 +341,65 @@ public class SettingsActivity extends SupanoteActivity {
         }
 
         private List<JSONObject> parseImportFile(Context context, Uri uri) throws Exception {
-            String jsonContent;
             try (InputStream rawStream = context.getContentResolver().openInputStream(uri)) {
                 if (rawStream == null) {
                     throw new Exception("openInputStream returned null for " + uri);
                 }
-                BufferedReader reader = new BufferedReader(
-                        new InputStreamReader(rawStream, StandardCharsets.UTF_8));
-                StringBuilder builder = new StringBuilder();
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    builder.append(line).append('\n');
-                }
-                jsonContent = builder.toString();
-            }
 
-            JSONObject root = new JSONObject(jsonContent);
-            JSONArray notesArray = root.getJSONArray(KEY_NOTES);
-            List<JSONObject> notes = new ArrayList<>(notesArray.length());
-            for (int i = 0; i < notesArray.length(); i++) {
-                JSONObject obj = notesArray.getJSONObject(i);
-                if (obj.optString(KEY_TITLE, "").trim().isEmpty()) continue;
-                notes.add(obj);
+                JsonReader reader = new JsonReader(new BufferedReader(
+                        new InputStreamReader(rawStream, StandardCharsets.UTF_8)));
+                List<JSONObject> notes = new ArrayList<>();
+                boolean foundNotes = false;
+
+                reader.beginObject();
+                while (reader.hasNext()) {
+                    String name = reader.nextName();
+                    if (KEY_VERSION.equals(name)) {
+                        int version = reader.nextInt();
+                        if (version > BACKUP_VERSION) {
+                            throw new Exception("Backup version " + version + " is newer than this app understands");
+                        }
+                    } else if (KEY_NOTES.equals(name)) {
+                        foundNotes = true;
+                        reader.beginArray();
+                        while (reader.hasNext()) {
+                            JSONObject note = readNote(reader);
+                            if (note != null) notes.add(note);
+                        }
+                        reader.endArray();
+                    } else {
+                        reader.skipValue();
+                    }
+                }
+                reader.endObject();
+
+                if (!foundNotes) throw new Exception("Backup has no notes array");
+                return notes;
             }
-            return notes;
+        }
+
+        /** Reads one backup entry, keeping only title and content; returns null for entries without a title. */
+        private JSONObject readNote(JsonReader reader) throws Exception {
+            String title = null;
+            String content = null;
+
+            reader.beginObject();
+            while (reader.hasNext()) {
+                String name = reader.nextName();
+                if (KEY_TITLE.equals(name) && reader.peek() == JsonToken.STRING) {
+                    title = reader.nextString();
+                } else if (KEY_CONTENT.equals(name) && reader.peek() == JsonToken.STRING) {
+                    content = reader.nextString();
+                } else {
+                    reader.skipValue();
+                }
+            }
+            reader.endObject();
+
+            if (title == null || title.trim().isEmpty()) return null;
+            return new JSONObject()
+                    .put(KEY_TITLE, title)
+                    .put(KEY_CONTENT, content == null ? "" : content);
         }
 
         private void confirmAndImport(List<JSONObject> notes) {
@@ -389,9 +429,12 @@ public class SettingsActivity extends SupanoteActivity {
                     Log.e(TAG_IMPORT, "Bulk import failed", e);
                     if (!isAdded()) return;
                     dismissProgressDialog();
-                    Toast.makeText(requireContext(),
-                            R.string.toast_import_failed,
-                            Toast.LENGTH_SHORT).show();
+                    String message = e instanceof NoteRepository.PartialImportException
+                            ? getString(R.string.toast_import_partial,
+                                    ((NoteRepository.PartialImportException) e).imported,
+                                    ((NoteRepository.PartialImportException) e).total)
+                            : getString(R.string.toast_import_failed);
+                    Toast.makeText(requireContext(), message, Toast.LENGTH_LONG).show();
                 }
             });
         }

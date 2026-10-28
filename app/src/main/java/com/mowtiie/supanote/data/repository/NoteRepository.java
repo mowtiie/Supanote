@@ -18,6 +18,8 @@ import java.util.List;
 
 public class NoteRepository {
 
+    public static final int PAGE_SIZE = 200;
+    private static final int IMPORT_BATCH_SIZE = 200;
     private static final String TABLE = "notes";
     private static final MediaType JSON = MediaType.get("application/json");
 
@@ -34,8 +36,21 @@ public class NoteRepository {
 
     public interface Callback<T> { void onSuccess(T result); void onError(Exception e); }
 
+    /** Some of the notes were inserted before a batch failed. */
+    public static class PartialImportException extends IOException {
+        public final int imported;
+        public final int total;
+
+        PartialImportException(int imported, int total, Exception cause) {
+            super(cause.getMessage(), cause);
+            this.imported = imported;
+            this.total = total;
+        }
+    }
+
+    /** Inserts the notes in batches; stops at the first failing batch and reports how many went in. */
     public void bulkInsert(List<JSONObject> notes, Callback<Integer> cb) {
-        JSONArray payload = new JSONArray();
+        List<JSONObject> cleaned = new ArrayList<>();
         try {
             for (JSONObject src : notes) {
                 String title = src.optString("title", "").trim();
@@ -43,15 +58,21 @@ public class NoteRepository {
                 JSONObject clean = new JSONObject();
                 clean.put("title", title);
                 clean.put("content", src.isNull("content") ? "" : src.optString("content", ""));
-                payload.put(clean);
+                cleaned.add(clean);
             }
         } catch (JSONException e) {
             cb.onError(e);
             return;
         }
 
-        if (payload.length() == 0) { cb.onSuccess(0); return; }
-        final int count = payload.length();
+        if (cleaned.isEmpty()) { cb.onSuccess(0); return; }
+        insertBatch(cleaned, 0, cb);
+    }
+
+    private void insertBatch(List<JSONObject> cleaned, int start, Callback<Integer> cb) {
+        int end = Math.min(start + IMPORT_BATCH_SIZE, cleaned.size());
+        JSONArray payload = new JSONArray();
+        for (int i = start; i < end; i++) payload.put(cleaned.get(i));
 
         Request req = base(rest() + TABLE)
                 .addHeader("Content-Type", "application/json")
@@ -60,17 +81,29 @@ public class NoteRepository {
                 .build();
 
         client.newCall(req).enqueue(new okhttp3.Callback() {
-            @Override public void onFailure(Call call, IOException e) { fail(cb, e); }
+            @Override public void onFailure(Call call, IOException e) { failImport(cb, e, start, cleaned.size()); }
             @Override public void onResponse(Call call, Response res) {
                 try (ResponseBody b = res.body()) {
                     if (!res.isSuccessful()) {
                         String body = b != null ? b.string() : "";
                         throw ApiException.of(res.code(), body);
                     }
-                    main.post(() -> cb.onSuccess(count));
-                } catch (Exception e) { fail(cb, e); }
+                } catch (Exception e) {
+                    failImport(cb, e, start, cleaned.size());
+                    return;
+                }
+
+                if (end >= cleaned.size()) {
+                    main.post(() -> cb.onSuccess(cleaned.size()));
+                } else {
+                    insertBatch(cleaned, end, cb);
+                }
             }
         });
+    }
+
+    private void failImport(Callback<Integer> cb, Exception e, int imported, int total) {
+        fail(cb, imported > 0 ? new PartialImportException(imported, total, e) : e);
     }
 
     private String rest() { return connection.getBaseUrl() + "/rest/v1/"; }
@@ -83,8 +116,28 @@ public class NoteRepository {
     }
 
     // ---------------------------- READ ----------------------------
+    /** Loads every note, one page at a time so no single response has to hold the whole table. */
     public void getNotes(Callback<List<Note>> cb) {
-        Request req = base(rest() + TABLE + "?select=*&order=created_at.desc").build();
+        collectPages(0, new ArrayList<>(), cb);
+    }
+
+    private void collectPages(int offset, List<Note> collected, Callback<List<Note>> cb) {
+        getNotesPage(offset, PAGE_SIZE, new Callback<List<Note>>() {
+            @Override public void onSuccess(List<Note> page) {
+                collected.addAll(page);
+                if (page.size() == PAGE_SIZE) {
+                    collectPages(offset + PAGE_SIZE, collected, cb);
+                } else {
+                    cb.onSuccess(collected);
+                }
+            }
+            @Override public void onError(Exception e) { cb.onError(e); }
+        });
+    }
+
+    /** Newest first; the id tie-break keeps pages stable when notes share a timestamp. */
+    public void getNotesPage(int offset, int limit, Callback<List<Note>> cb) {
+        Request req = base(rest() + TABLE + "?select=*&order=created_at.desc,id.desc&limit=" + limit + "&offset=" + offset).build();
         client.newCall(req).enqueue(new okhttp3.Callback() {
             @Override public void onFailure(Call call, IOException e) { fail(cb, e); }
             @Override public void onResponse(Call call, Response res) {

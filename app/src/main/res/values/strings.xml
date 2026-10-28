@@ -45,6 +45,7 @@
     <string name="toast_export_failed">Export failed</string>
     <string name="toast_import_success">Imported %1$d notes</string>
     <string name="toast_import_failed">Import failed</string>
+    <string name="toast_import_partial">Import stopped after %1$d of %2$d notes because of an error</string>
     <string name="toast_import_invalid_file">That file isn\'t a Supanote backup</string>
     <string name="toast_server_url_scheme_required">URL must start with https://</string>
     <string name="toast_server_url_not_reached">Could not reach that server. Please check the URL.</string>

@@ -24,6 +24,9 @@ public class NoteViewModel extends AndroidViewModel {
     private final MutableLiveData<Boolean> loading = new MutableLiveData<>(false);
     private final MutableLiveData<String> error = new MutableLiveData<>();
 
+    /** Bumped on every reload so a slow, superseded load cannot overwrite newer results. */
+    private int loadGeneration;
+
     public LiveData<List<Note>> getNotes() { return notes; }
     public LiveData<Boolean> getLoading() { return loading; }
     public LiveData<String> getError() { return error; }
@@ -41,19 +44,38 @@ public class NoteViewModel extends AndroidViewModel {
         return c == null ? new ArrayList<>() : new ArrayList<>(c);
     }
 
+    /**
+     * Loads the notes a page at a time. With nothing on screen yet, each page is published as it arrives so
+     * the first notes show quickly; otherwise the list is swapped once, when everything has loaded, so an
+     * already-visible list does not shrink and jump while refreshing.
+     */
     public void loadNotes() {
+        final int generation = ++loadGeneration;
+        final boolean progressive = currentList().isEmpty();
         loading.setValue(true);
-        repo.getNotes(new NoteRepository.Callback<>() {
+        loadPage(generation, progressive, 0, new ArrayList<>());
+    }
+
+    private void loadPage(int generation, boolean progressive, int offset, List<Note> collected) {
+        repo.getNotesPage(offset, NoteRepository.PAGE_SIZE, new NoteRepository.Callback<List<Note>>() {
             @Override
-            public void onSuccess(List<Note> result) {
-                loading.setValue(false);
-                notes.setValue(result);
+            public void onSuccess(List<Note> page) {
+                if (generation != loadGeneration) return;
+                collected.addAll(page);
+                boolean last = page.size() < NoteRepository.PAGE_SIZE;
+
+                if (progressive || last) {
+                    notes.setValue(new ArrayList<>(collected));
+                    loading.setValue(false);
+                }
+                if (!last) loadPage(generation, progressive, offset + NoteRepository.PAGE_SIZE, collected);
             }
 
             @Override
             public void onError(Exception e) {
+                if (generation != loadGeneration) return;
                 loading.setValue(false);
-                error.setValue(e.getMessage());
+                error.setValue(friendlyError(e));
             }
         });
     }
