@@ -1,6 +1,7 @@
 package com.mowtiie.supanote.ui;
 
 import android.content.res.Configuration;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.WindowManager;
 
@@ -24,6 +25,12 @@ public abstract class SupanoteActivity extends AppCompatActivity {
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         preferenceUtil = new PreferenceUtil(this);
         super.onCreate(savedInstanceState);
+
+        // Notes are private by default: never show them in the Recents thumbnail. Blocking screenshots and screen
+        // recordings stays an opt-in setting (FLAG_SECURE below). This API only exists on Android 13+.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            setRecentsScreenshotEnabled(false);
+        }
 
         applyScreenPrivacy();
 

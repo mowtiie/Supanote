@@ -1,8 +1,11 @@
 package com.mowtiie.supanote.data.repository;
 
+import android.content.Context;
+import android.content.res.Resources;
 import android.os.Handler;
 import android.os.Looper;
 
+import com.mowtiie.supanote.R;
 import com.mowtiie.supanote.data.local.ConnectionManager;
 import com.mowtiie.supanote.data.local.SessionManager;
 
@@ -27,7 +30,10 @@ public class AuthRepository {
     private final SessionManager session;
     private final ConnectionManager connection;
 
-    public AuthRepository(ConnectionManager connection, SessionManager session, OkHttpClient client) {
+    private final Resources resources;
+
+    public AuthRepository(Context context, ConnectionManager connection, SessionManager session, OkHttpClient client) {
+        this.resources = context.getApplicationContext().getResources();
         this.session = session;
         this.connection = connection;
         this.client = client;
@@ -69,7 +75,7 @@ public class AuthRepository {
 
     private void post(String url, String email, String password, Callback cb) {
         if (connection.getAnonKey() == null || connection.getAnonKey().isEmpty()) {
-            cb.onError("Connection isn't set up. Please reconnect to your server.");
+            cb.onError(resources.getString(R.string.error_connection_not_set_up));
             return;
         }
 
@@ -99,7 +105,7 @@ public class AuthRepository {
                     }
                     JSONObject obj = new JSONObject(json);
                     if (obj.optString("access_token", null) == null) {
-                        main.post(() -> cb.onError("Check your email to confirm your account, then sign in."));
+                        main.post(() -> cb.onError(resources.getString(R.string.error_confirm_email)));
                         return;
                     }
                     session.saveSession(obj);
@@ -119,6 +125,6 @@ public class AuthRepository {
             if (o.has("message")) return o.optString("message");
             if (o.has("error"))   return o.optString("error");
         } catch (Exception ignored) {}
-        return "Something went wrong. Please try again.";
+        return resources.getString(R.string.error_generic_try_again);
     }
 }

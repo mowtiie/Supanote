@@ -5,6 +5,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.accessibility.AccessibilityNodeInfoCompat;
 import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
@@ -23,7 +25,11 @@ import java.util.TimeZone;
 
 public class NoteAdapter extends ListAdapter<Note, NoteAdapter.NoteViewHolder> {
 
-    public interface OnNoteAction { void onOpen(Note note); }
+    public interface OnNoteAction {
+        void onOpen(Note note);
+        /** The user asked to delete a note without opening it (long-press or the accessibility action). */
+        void onDeleteRequested(Note note);
+    }
 
     private final OnNoteAction actions;
     private final DateFormat displayFormat = DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT, Locale.getDefault());
@@ -43,7 +49,7 @@ public class NoteAdapter extends ListAdapter<Note, NoteAdapter.NoteViewHolder> {
         }
         @Override public boolean areContentsTheSame(@NonNull Note a, @NonNull Note b) {
             return eq(a.getTitle(), b.getTitle()) && eq(a.getContent(), b.getContent())
-                    && eq(a.getCreatedAt(), b.getCreatedAt());
+                    && eq(a.getCreatedAt(), b.getCreatedAt()) && eq(a.getUpdatedAt(), b.getUpdatedAt());
         }
         private boolean eq(String x, String y) { return Objects.equals(x, y); }
     };
@@ -73,8 +79,24 @@ public class NoteAdapter extends ListAdapter<Note, NoteAdapter.NoteViewHolder> {
             title.setText(note.getTitle());
             content.setText(note.getContent());
             content.setVisibility(note.getContent() == null || note.getContent().isEmpty() ? View.GONE : View.VISIBLE);
-            date.setText(formatDate(note.getCreatedAt()));
+            if (note.isEdited()) {
+                date.setText(itemView.getContext().getString(R.string.label_note_edited, formatDate(note.getUpdatedAt())));
+            } else {
+                date.setText(formatDate(note.getCreatedAt()));
+            }
             itemView.setOnClickListener(v -> actions.onOpen(note));
+            itemView.setOnLongClickListener(v -> {
+                actions.onDeleteRequested(note);
+                return true;
+            });
+            // Swiping to delete is not possible with a screen reader, so expose the same action to TalkBack.
+            ViewCompat.replaceAccessibilityAction(itemView,
+                    AccessibilityNodeInfoCompat.AccessibilityActionCompat.ACTION_LONG_CLICK,
+                    itemView.getContext().getString(R.string.button_delete),
+                    (view, arguments) -> {
+                        actions.onDeleteRequested(note);
+                        return true;
+                    });
         }
     }
 

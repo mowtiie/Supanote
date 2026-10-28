@@ -30,6 +30,7 @@
     <string name="content_description_add_note">Add note</string>
     <string name="label_list_offline">Couldn\'t load your notes. Check your connection and try again.</string>
     <string name="label_list_empty">No notes yet — tap + to add one</string>
+    <string name="label_note_edited">Edited %1$s</string>
     <string name="label_list_empty_search">No notes match "%s"</string>
 
     <!-- INTENT EXTRAS -->
@@ -58,6 +59,9 @@
     <string name="toast_note_delete_failed">Could not delete, try again later.</string>
     <string name="error_server_unreachable">Can\'t reach the server, check your connection.</string>
     <string name="error_generic">Something went wrong.</string>
+    <string name="error_generic_try_again">Something went wrong. Please try again.</string>
+    <string name="error_connection_not_set_up">Connection isn\'t set up. Please reconnect to your server.</string>
+    <string name="error_confirm_email">Check your email to confirm your account, then sign in.</string>
 
     <!-- DIALOG TITLES -->
     <string name="dialog_title_crash">App has crashed</string>

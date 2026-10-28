@@ -19,13 +19,19 @@
             android:layout_height="?attr/actionBarSize"/>
     </com.google.android.material.appbar.AppBarLayout>
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/notesRecycler"
+    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+        android:id="@+id/swipeRefresh"
         app:layout_behavior="@string/appbar_scrolling_view_behavior"
-        android:clipToPadding="false"
-        android:paddingBottom="88dp"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"/>
+        android:layout_height="match_parent">
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/notesRecycler"
+            android:clipToPadding="false"
+            android:paddingBottom="88dp"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"/>
+    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
     <LinearLayout
         android:id="@+id/emptyStateContainer"

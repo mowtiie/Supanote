@@ -228,8 +228,10 @@ public class NoteRepository {
             Note n = new Note();
             n.setId(o.optLong("id"));
             n.setTitle(o.optString("title"));
-            n.setContent(o.optString("content"));
+            // optString turns a JSON null into the text "null", so check for null explicitly.
+            n.setContent(o.isNull("content") ? "" : o.optString("content"));
             n.setCreatedAt(o.optString("created_at"));
+            n.setUpdatedAt(o.isNull("updated_at") ? null : o.optString("updated_at", null));
             list.add(n);
         }
         return list;

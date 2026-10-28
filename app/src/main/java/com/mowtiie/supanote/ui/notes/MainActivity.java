@@ -22,6 +22,7 @@ import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.material.color.MaterialColors;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.snackbar.Snackbar;
 import com.mowtiie.supanote.R;
@@ -140,6 +141,7 @@ public class MainActivity extends SupanoteActivity implements NoteAdapter.OnNote
 
         noteViewModel.getLoading().observe(this, loading -> {
             isLoading = loading;
+            if (!loading) binding.swipeRefresh.setRefreshing(false);
             // Reloads over an already-populated list happen silently; only block the screen when there is nothing to show.
             binding.loadingIndicator.setVisibility(loading && allNotes.isEmpty() ? View.VISIBLE : View.GONE);
             if (loading) {
@@ -170,6 +172,12 @@ public class MainActivity extends SupanoteActivity implements NoteAdapter.OnNote
                 deleteWithUndo(noteAdapter.getCurrentList().get(pos));
             }
         }).attachToRecyclerView(binding.notesRecycler);
+
+        binding.swipeRefresh.setColorSchemeColors(
+                MaterialColors.getColor(binding.swipeRefresh, androidx.appcompat.R.attr.colorPrimary));
+        binding.swipeRefresh.setProgressBackgroundColorSchemeColor(
+                MaterialColors.getColor(binding.swipeRefresh, com.google.android.material.R.attr.colorSurfaceContainerHigh));
+        binding.swipeRefresh.setOnRefreshListener(() -> noteViewModel.loadNotes());
 
         binding.emptyStateRetry.setOnClickListener(v -> noteViewModel.loadNotes());
         binding.fabAdd.setOnClickListener(v -> startActivity(new Intent(this, ManageNoteActivity.class)));
@@ -321,6 +329,16 @@ public class MainActivity extends SupanoteActivity implements NoteAdapter.OnNote
             return;
         }
         noteViewModel.loadNotes();
+    }
+
+    @Override
+    public void onDeleteRequested(Note note) {
+        new MaterialAlertDialogBuilder(this)
+                .setTitle(R.string.dialog_title_note_delete)
+                .setMessage(R.string.dialog_message_note_delete)
+                .setPositiveButton(R.string.button_delete, (d, w) -> deleteWithUndo(note))
+                .setNegativeButton(R.string.button_cancel, null)
+                .show();
     }
 
     @Override

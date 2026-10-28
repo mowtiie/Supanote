@@ -24,8 +24,14 @@ public class PreferenceUtil {
         sharedPreferences.edit().putBoolean("dynamic_colors", value).apply();
     }
 
+    /** Returns the stored theme key, rewriting a value saved by an older version (a display name) to its key. */
     public String getTheme() {
-        return sharedPreferences.getString("theme", Theme.SYSTEM.VALUE);
+        String stored = sharedPreferences.getString("theme", Theme.SYSTEM.VALUE);
+        String key = Theme.fromStored(stored).VALUE;
+        if (!key.equals(stored)) {
+            sharedPreferences.edit().putString("theme", key).apply();
+        }
+        return key;
     }
 
     public void setTheme(String value) {

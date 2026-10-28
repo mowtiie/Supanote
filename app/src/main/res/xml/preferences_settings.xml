@@ -11,7 +11,7 @@
             android:title="@string/preferences_appearance_theme"
             android:entries="@array/theme_entries"
             android:entryValues="@array/theme_entry_values"
-            android:defaultValue="System Default"
+            android:defaultValue="system"
             app:useSimpleSummaryProvider="true"
             app:iconSpaceReserved="false"/>
 
