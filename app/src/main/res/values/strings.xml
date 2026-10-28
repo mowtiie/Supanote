@@ -43,7 +43,10 @@
     <string name="toast_export_no_notes">Nothing to export</string>
     <string name="toast_export_success">Notes exported</string>
     <string name="toast_export_failed">Export failed</string>
-    <string name="toast_import_success">Imported %1$d notes</string>
+    <plurals name="toast_import_success">
+        <item quantity="one">Imported %1$d note</item>
+        <item quantity="other">Imported %1$d notes</item>
+    </plurals>
     <string name="toast_import_failed">Import failed</string>
     <string name="toast_import_partial">Import stopped after %1$d of %2$d notes because of an error</string>
     <string name="toast_import_invalid_file">That file isn\'t a Supanote backup</string>
@@ -73,7 +76,10 @@
     <string name="dialog_message_progress_exporting">Exporting notes\u2026</string>
     <string name="dialog_message_progress_importing">Importing notes\u2026</string>
     <string name="dialog_message_change_server_confirm">You will be signed out and need to reconnect to a server. Tap continue to proceed.</string>
-    <string name="dialog_message_import_confirm">%1$d notes from the backup will be added to your account. Your existing notes will not be changed.</string>
+    <plurals name="dialog_message_import_confirm">
+        <item quantity="one">%1$d note from the backup will be added to your account. Your existing notes will not be changed.</item>
+        <item quantity="other">%1$d notes from the backup will be added to your account. Your existing notes will not be changed.</item>
+    </plurals>
     <string name="dialog_message_note_delete">This will permanently delete the note. Tap delete to proceed.</string>
     <string name="dialog_message_note_discard_changes">Your changes will not be saved. Tap discard to proceed.</string>
 

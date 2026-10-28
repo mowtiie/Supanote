@@ -406,7 +406,7 @@ public class SettingsActivity extends SupanoteActivity {
             if (!isAdded()) return;
             new MaterialAlertDialogBuilder(requireContext())
                     .setTitle(R.string.dialog_title_import_confirm)
-                    .setMessage(getString(R.string.dialog_message_import_confirm, notes.size()))
+                    .setMessage(getResources().getQuantityString(R.plurals.dialog_message_import_confirm, notes.size(), notes.size()))
                     .setPositiveButton(R.string.button_import, (d, w) -> uploadImportedNotes(notes))
                     .setNegativeButton(android.R.string.cancel, null)
                     .show();
@@ -422,7 +422,7 @@ public class SettingsActivity extends SupanoteActivity {
                     if (!isAdded()) return;
                     dismissProgressDialog();
                     Toast.makeText(requireContext(),
-                            getString(R.string.toast_import_success, count),
+                            getResources().getQuantityString(R.plurals.toast_import_success, count, count),
                             Toast.LENGTH_SHORT).show();
                 }
                 @Override public void onError(Exception e) {
