@@ -61,7 +61,7 @@ public class CrashHandler implements Thread.UncaughtExceptionHandler {
     private String buildReport(Thread thread, Throwable throwable) {
         StringBuilder sb = new StringBuilder();
 
-        sb.append("=== Centsation Crash Report ===\n");
+        sb.append("=== Supanote Crash Report ===\n");
         sb.append("Time: ").append(new Date()).append("\n");
         sb.append("Thread: ").append(thread.getName()).append("\n");
         sb.append("\n");
