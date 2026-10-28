@@ -38,9 +38,11 @@
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/note_input_title"
+                    android:importantForAutofill="no"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:inputType="textCapSentences"
+                    android:imeOptions="flagNoPersonalizedLearning"
                     android:maxLines="2" />
             </com.google.android.material.textfield.TextInputLayout>
 
@@ -54,9 +56,11 @@
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/note_input_content"
+                    android:importantForAutofill="no"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:inputType="textMultiLine|textCapSentences"
+                    android:imeOptions="flagNoPersonalizedLearning"
                     android:gravity="top|start"
                     android:minLines="10" />
             </com.google.android.material.textfield.TextInputLayout>

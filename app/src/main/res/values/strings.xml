@@ -67,7 +67,7 @@
     <string name="dialog_title_note_discard_changes">Discard changes?</string>
 
     <!-- DIALOG MESSAGES -->
-    <string name="dialog_message_crash">The app closed unexpectedly. You can help fix the issue by emailing the error report or saving it as a text file.</string>
+    <string name="dialog_message_crash">The app closed unexpectedly. You can help fix the issue by emailing the error report or saving it as a text file. The report can include technical details such as your server\'s hostname, so review it before sending.</string>
     <string name="dialog_message_progress_exporting">Exporting notes\u2026</string>
     <string name="dialog_message_progress_importing">Importing notes\u2026</string>
     <string name="dialog_message_change_server_confirm">You will be signed out and need to reconnect to a server. Tap continue to proceed.</string>
@@ -87,6 +87,9 @@
     <string name="button_create_account">Create an account</string>
     <string name="button_undo">Undo</string>
     <string name="error_field_required">Required</string>
+    <string name="error_server_url_invalid">Enter a valid URL, for example https://yourproject.supabase.co</string>
+    <string name="error_key_invalid">The key contains spaces or invalid characters</string>
+    <string name="error_server_unexpected_response">The server answered with HTTP %1$d. Check the URL.</string>
     <string name="snackbar_note_deleted">Note deleted</string>
     <string name="dialog_title_sign_out">Sign out?</string>
     <string name="dialog_message_sign_out">You will need to sign in again to see your notes.</string>
@@ -122,7 +125,7 @@
     <string name="preferences_backup_import">Import</string>
     <string name="preferences_backup_import_summary">Add notes from a Supanote JSON backup file</string>
     <string name="preferences_backup_export">Export</string>
-    <string name="preferences_backup_export_summary">Save all your notes to a JSON backup file</string>
+    <string name="preferences_backup_export_summary">Save all your notes to a JSON backup file (not encrypted)</string>
 
     <!-- CONFIGURATION PREFERENCES -->
     <string name="preferences_config_category">Configuration</string>

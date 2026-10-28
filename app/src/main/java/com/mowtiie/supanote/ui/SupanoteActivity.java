@@ -25,12 +25,7 @@ public abstract class SupanoteActivity extends AppCompatActivity {
         preferenceUtil = new PreferenceUtil(this);
         super.onCreate(savedInstanceState);
 
-        if (preferenceUtil.isScreenPrivacyEnabled()) {
-            getWindow().setFlags(
-                    WindowManager.LayoutParams.FLAG_SECURE,
-                    WindowManager.LayoutParams.FLAG_SECURE
-            );
-        }
+        applyScreenPrivacy();
 
         String theme = preferenceUtil.getTheme();
         if (theme.equals(Theme.SYSTEM.VALUE)) {
@@ -54,6 +49,21 @@ public abstract class SupanoteActivity extends AppCompatActivity {
 
         if (preferenceUtil.isDynamicColors()) {
             DynamicColors.applyToActivityIfAvailable(this);
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // Re-check on every resume so toggling the setting also covers activities already in the back stack.
+        applyScreenPrivacy();
+    }
+
+    private void applyScreenPrivacy() {
+        if (preferenceUtil.isScreenPrivacyEnabled()) {
+            getWindow().addFlags(WindowManager.LayoutParams.FLAG_SECURE);
+        } else {
+            getWindow().clearFlags(WindowManager.LayoutParams.FLAG_SECURE);
         }
     }
 

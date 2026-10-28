@@ -18,17 +18,23 @@ import com.mowtiie.supanote.SupanoteApp;
 import com.mowtiie.supanote.databinding.ActivitySetupBinding;
 import com.mowtiie.supanote.ui.SupanoteActivity;
 import com.mowtiie.supanote.ui.auth.LoginActivity;
+import com.mowtiie.supanote.ui.notes.MainActivity;
 
 import java.io.IOException;
 import java.util.Objects;
+import java.util.regex.Pattern;
 
 import okhttp3.Call;
+import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
 
 public class SetupActivity extends SupanoteActivity {
+
+    /** Visible ASCII only: anything else (spaces, newlines, unicode) would make OkHttp reject the header. */
+    private static final Pattern KEY_PATTERN = Pattern.compile("[\\x21-\\x7E]+");
 
     private ActivitySetupBinding binding;
 
@@ -94,8 +100,20 @@ public class SetupActivity extends SupanoteActivity {
             return;
         }
 
+        if (HttpUrl.parse(url) == null) {
+            binding.serverUrlLayout.setError(getString(R.string.error_server_url_invalid));
+            binding.serverUrlInput.requestFocus();
+            return;
+        }
+
         if (key.isEmpty()) {
             binding.publishableKeyLayout.setError(getString(R.string.error_field_required));
+            binding.publishableKeyInput.requestFocus();
+            return;
+        }
+
+        if (!KEY_PATTERN.matcher(key).matches()) {
+            binding.publishableKeyLayout.setError(getString(R.string.error_key_invalid));
             binding.publishableKeyInput.requestFocus();
             return;
         }
@@ -105,10 +123,17 @@ public class SetupActivity extends SupanoteActivity {
     }
 
     private void testConnection(String url, String key) {
-        Request req = new Request.Builder()
-                .url(url + "/auth/v1/settings")
-                .addHeader("apikey", key)
-                .build();
+        Request req;
+        try {
+            req = new Request.Builder()
+                    .url(url + "/auth/v1/settings")
+                    .addHeader("apikey", key)
+                    .build();
+        } catch (IllegalArgumentException e) {
+            setLoading(false);
+            binding.serverUrlLayout.setError(getString(R.string.error_server_url_invalid));
+            return;
+        }
         final String fUrl = url, fKey = key;
         client.newCall(req).enqueue(new okhttp3.Callback() {
             @Override public void onFailure(Call call, IOException e) {
@@ -126,6 +151,8 @@ public class SetupActivity extends SupanoteActivity {
                     setLoading(false);
                     if (code == 401 || code == 403) {
                         binding.publishableKeyLayout.setError(getString(R.string.toast_key_rejected, code, shorten(fBody)));
+                    } else if (code < 200 || code >= 300) {
+                        binding.serverUrlLayout.setError(getString(R.string.error_server_unexpected_response, code));
                     } else {
                         ((SupanoteApp) getApplication()).connection().save(fUrl, fKey);
                         goToLogin();
@@ -149,7 +176,8 @@ public class SetupActivity extends SupanoteActivity {
     }
 
     private void goToLogin() {
-        startActivity(new Intent(this, LoginActivity.class));
+        boolean signedIn = ((SupanoteApp) getApplication()).session().isLoggedIn();
+        startActivity(new Intent(this, signedIn ? MainActivity.class : LoginActivity.class));
         finish();
     }
 }

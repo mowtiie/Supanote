@@ -7,7 +7,7 @@ import android.os.Looper;
 import com.mowtiie.supanote.data.local.ConnectionManager;
 import com.mowtiie.supanote.data.local.SessionManager;
 import com.mowtiie.supanote.data.model.Note;
-import com.mowtiie.supanote.data.remote.TokenAuthenticator;
+import com.mowtiie.supanote.data.remote.ApiException;
 
 import okhttp3.*;
 import org.json.*;
@@ -65,7 +65,7 @@ public class NoteRepository {
                 try (ResponseBody b = res.body()) {
                     if (!res.isSuccessful()) {
                         String body = b != null ? b.string() : "";
-                        throw new IOException("HTTP " + res.code() + ": " + body);
+                        throw ApiException.of(res.code(), body);
                     }
                     main.post(() -> cb.onSuccess(count));
                 } catch (Exception e) { fail(cb, e); }
@@ -90,7 +90,7 @@ public class NoteRepository {
             @Override public void onResponse(Call call, Response res) {
                 try (ResponseBody b = res.body()) {
                     String json = b != null ? b.string() : "[]";
-                    if (!res.isSuccessful()) throw new IOException("HTTP " + res.code() + ": " + json);
+                    if (!res.isSuccessful()) throw ApiException.of(res.code(), json);
                     List<Note> notes = parseNotes(json);
                     main.post(() -> cb.onSuccess(notes));
                 } catch (Exception e) { fail(cb, e); }
@@ -139,7 +139,7 @@ public class NoteRepository {
                 try (ResponseBody b = res.body()) {
                     if (!res.isSuccessful()) {
                         String body = b != null ? b.string() : "";
-                        throw new IOException("HTTP " + res.code() + ": " + body);
+                        throw ApiException.of(res.code(), body);
                     }
                     main.post(() -> cb.onSuccess(null));
                 } catch (Exception e) { fail(cb, e); }
@@ -154,7 +154,7 @@ public class NoteRepository {
             @Override public void onResponse(Call call, Response res) {
                 try (ResponseBody b = res.body()) {
                     String json = b != null ? b.string() : "";
-                    if (!res.isSuccessful()) throw new IOException("HTTP " + res.code() + ": " + json);
+                    if (!res.isSuccessful()) throw ApiException.of(res.code(), json);
                     List<Note> notes = parseNotes(json);
                     Note note = notes.isEmpty() ? null : notes.get(0);
                     main.post(() -> cb.onSuccess(note));

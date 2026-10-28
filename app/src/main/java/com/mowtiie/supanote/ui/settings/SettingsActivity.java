@@ -31,6 +31,7 @@ import com.mowtiie.supanote.R;
 import com.mowtiie.supanote.SupanoteApp;
 import com.mowtiie.supanote.data.Theme;
 import com.mowtiie.supanote.data.model.Note;
+import com.mowtiie.supanote.data.repository.AuthRepository;
 import com.mowtiie.supanote.data.repository.NoteRepository;
 import com.mowtiie.supanote.databinding.ActivitySettingsBinding;
 import com.mowtiie.supanote.ui.SupanoteActivity;
@@ -401,7 +402,8 @@ public class SettingsActivity extends SupanoteActivity {
                     .setMessage(R.string.dialog_message_change_server_confirm)
                     .setPositiveButton(R.string.button_changer_server_continue, (d, w) -> {
                         SupanoteApp app = (SupanoteApp) requireActivity().getApplication();
-                        app.session().clear();
+                        // Revoke the session on the old server (best effort) before forgetting it.
+                        new AuthRepository(app.connection(), app.session(), app.httpClient()).signOut();
                         app.connection().clear();
                         Intent intent = new Intent(requireContext(), SetupActivity.class);
                         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);

@@ -10,6 +10,9 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class SessionManager {
 
@@ -18,10 +21,36 @@ public class SessionManager {
     private static final String K_REFRESH = "refresh_token";
     private static final String K_EMAIL = "user_email";
 
-    private final SharedPreferences prefs;
+    private final Context appContext;
+
+    /** In-memory copy of the stored values; the source of truth once storage has been opened. */
+    private final Map<String, String> cache = new ConcurrentHashMap<>();
+
+    /** Encrypted storage, or null if the device keystore is unusable (the session then lasts until the process dies). */
+    private SharedPreferences prefs;
+    private boolean opened;
 
     public SessionManager(Context context) {
-        prefs = buildEncryptedPrefs(context.getApplicationContext());
+        this.appContext = context.getApplicationContext();
+    }
+
+    /** Opens the encrypted storage. Slow (keystore work), so call it off the main thread at startup. */
+    public void warmUp() {
+        storage();
+    }
+
+    private synchronized SharedPreferences storage() {
+        if (!opened) {
+            opened = true;
+            prefs = buildEncryptedPrefs(appContext);
+            if (prefs != null) {
+                for (String key : new String[]{K_ACCESS, K_REFRESH, K_EMAIL}) {
+                    String value = prefs.getString(key, null);
+                    if (value != null) cache.put(key, value);
+                }
+            }
+        }
+        return prefs;
     }
 
     private static SharedPreferences buildEncryptedPrefs(Context context) {
@@ -32,7 +61,7 @@ public class SessionManager {
             try {
                 return create(context);
             } catch (GeneralSecurityException | IOException retry) {
-                throw new RuntimeException("Could not create encrypted prefs", retry);
+                return null;
             }
         }
     }
@@ -49,29 +78,52 @@ public class SessionManager {
                 EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM);
     }
 
+    private String get(String key) {
+        storage();
+        return cache.get(key);
+    }
+
+    private void putAll(Map<String, String> values) {
+        SharedPreferences p = storage();
+        SharedPreferences.Editor editor = p != null ? p.edit() : null;
+        for (Map.Entry<String, String> entry : values.entrySet()) {
+            if (entry.getValue() == null) {
+                cache.remove(entry.getKey());
+                if (editor != null) editor.remove(entry.getKey());
+            } else {
+                cache.put(entry.getKey(), entry.getValue());
+                if (editor != null) editor.putString(entry.getKey(), entry.getValue());
+            }
+        }
+        if (editor != null) editor.apply();
+    }
+
     public void saveSession(JSONObject session) {
-        SharedPreferences.Editor e = prefs.edit();
-        e.putString(K_ACCESS, session.optString("access_token", null));
-        e.putString(K_REFRESH, session.optString("refresh_token", null));
+        Map<String, String> values = new HashMap<>();
+        values.put(K_ACCESS, session.optString("access_token", null));
+        values.put(K_REFRESH, session.optString("refresh_token", null));
         JSONObject user = session.optJSONObject("user");
-        if (user != null) e.putString(K_EMAIL, user.optString("email", null));
-        e.apply();
+        if (user != null) values.put(K_EMAIL, user.optString("email", null));
+        putAll(values);
     }
 
     public void updateTokens(String access, String refresh) {
-        prefs.edit().putString(K_ACCESS, access).putString(K_REFRESH, refresh).apply();
+        Map<String, String> values = new HashMap<>();
+        values.put(K_ACCESS, access);
+        values.put(K_REFRESH, refresh);
+        putAll(values);
     }
 
     public String getAccessToken() {
-        return prefs.getString(K_ACCESS, null);
+        return get(K_ACCESS);
     }
 
     public String getRefreshToken() {
-        return prefs.getString(K_REFRESH, null);
+        return get(K_REFRESH);
     }
 
     public String getUserEmail() {
-        return prefs.getString(K_EMAIL, null);
+        return get(K_EMAIL);
     }
 
     public boolean isLoggedIn() {
@@ -79,6 +131,8 @@ public class SessionManager {
     }
 
     public void clear() {
-        prefs.edit().clear().apply();
+        SharedPreferences p = storage();
+        cache.clear();
+        if (p != null) p.edit().clear().apply();
     }
 }

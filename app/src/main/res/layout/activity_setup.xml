@@ -116,6 +116,7 @@
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/connect"
+            android:filterTouchesWhenObscured="true"
             android:text="@string/button_connect"
             android:layout_marginTop="16dp"
             android:layout_width="match_parent"

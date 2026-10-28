@@ -23,10 +23,19 @@ public class SupanoteApp extends Application {
 
         session = new SessionManager(this);
         connection = new ConnectionManager(this);
-        httpClient = new OkHttpClient();
-        authedHttpClient = httpClient.newBuilder()
-                .authenticator(new TokenAuthenticator(connection, session))
+
+        // Never follow redirects: a redirect could replay credentials or request bodies (e.g. the refresh
+        // token) to another host, or downgrade from https to http.
+        httpClient = new OkHttpClient.Builder()
+                .followRedirects(false)
+                .followSslRedirects(false)
                 .build();
+        authedHttpClient = httpClient.newBuilder()
+                .authenticator(new TokenAuthenticator(connection, session, httpClient))
+                .build();
+
+        // Opening the encrypted session storage is slow; do it off the main thread.
+        new Thread(session::warmUp, "session-warmup").start();
     }
 
     public SessionManager session() {
@@ -44,4 +53,5 @@ public class SupanoteApp extends Application {
     public OkHttpClient authedHttpClient() {
         return authedHttpClient;
     }
+
 }
