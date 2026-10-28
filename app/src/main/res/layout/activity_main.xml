@@ -22,6 +22,8 @@
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/notesRecycler"
         app:layout_behavior="@string/appbar_scrolling_view_behavior"
+        android:clipToPadding="false"
+        android:paddingBottom="88dp"
         android:layout_width="match_parent"
         android:layout_height="match_parent"/>
 
@@ -52,6 +54,15 @@
             android:textAppearance="?attr/textAppearanceBodyLarge"
             android:textColor="?attr/colorOnSurfaceVariant"
             android:fontFamily="sans-serif-medium"/>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/emptyStateRetry"
+            style="@style/Widget.Material3.Button.TonalButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="@string/button_retry"
+            android:visibility="gone"/>
     </LinearLayout>
 
     <LinearLayout

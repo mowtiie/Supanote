@@ -40,6 +40,9 @@ import java.util.Locale;
 
 public class MainActivity extends SupanoteActivity implements NoteAdapter.OnNoteAction {
 
+    private static final String STATE_SEARCH_QUERY = "state_search_query";
+    private static final String STATE_SORT_MODE = "state_sort_mode";
+
     private enum Sort { NEWEST, OLDEST, TITLE_AZ, TITLE_ZA }
     private enum ListState { LOADING, LOADED_EMPTY, LOADED_WITH_NOTES, ERROR }
     private ListState state = ListState.LOADING;
@@ -93,6 +96,11 @@ public class MainActivity extends SupanoteActivity implements NoteAdapter.OnNote
         }
 
         firstLoadDone = savedInstanceState != null;
+        if (savedInstanceState != null) {
+            searchQuery = savedInstanceState.getString(STATE_SEARCH_QUERY, "");
+            int savedSort = savedInstanceState.getInt(STATE_SORT_MODE, Sort.NEWEST.ordinal());
+            if (savedSort >= 0 && savedSort < Sort.values().length) sortMode = Sort.values()[savedSort];
+        }
 
         EdgeToEdge.enable(this);
         binding = ActivityMainBinding.inflate(getLayoutInflater());
@@ -122,7 +130,8 @@ public class MainActivity extends SupanoteActivity implements NoteAdapter.OnNote
 
         noteViewModel.getLoading().observe(this, loading -> {
             isLoading = loading;
-            binding.loadingIndicator.setVisibility(loading ? View.VISIBLE : View.GONE);
+            // Reloads over an already-populated list happen silently; only block the screen when there is nothing to show.
+            binding.loadingIndicator.setVisibility(loading && allNotes.isEmpty() ? View.VISIBLE : View.GONE);
             if (loading) {
                 state = ListState.LOADING;
                 binding.emptyStateContainer.setVisibility(View.GONE);
@@ -141,6 +150,7 @@ public class MainActivity extends SupanoteActivity implements NoteAdapter.OnNote
             }
         });
 
+        binding.emptyStateRetry.setOnClickListener(v -> noteViewModel.loadNotes());
         binding.fabAdd.setOnClickListener(v -> startActivity(new Intent(this, ManageNoteActivity.class)));
 
         if (savedInstanceState == null) {
@@ -188,6 +198,8 @@ public class MainActivity extends SupanoteActivity implements NoteAdapter.OnNote
     private String title(Note n) { return n.getTitle() == null ? "" : n.getTitle(); }
 
     private void updateEmptyState(boolean filteredResultEmpty) {
+        binding.emptyStateRetry.setVisibility(View.GONE);
+
         if (isLoading || !firstLoadDone) {
             binding.emptyStateContainer.setVisibility(View.GONE);
             return;
@@ -205,6 +217,7 @@ public class MainActivity extends SupanoteActivity implements NoteAdapter.OnNote
                 case ERROR:
                     binding.emptyStateIcon.setImageDrawable(AppCompatResources.getDrawable(this, R.drawable.ic_offline));
                     binding.emptyStateLabel.setText(R.string.label_list_offline);
+                    binding.emptyStateRetry.setVisibility(View.VISIBLE);
                     break;
                 case LOADED_EMPTY:
                 default:
@@ -215,6 +228,13 @@ public class MainActivity extends SupanoteActivity implements NoteAdapter.OnNote
         } else {
             binding.emptyStateContainer.setVisibility(View.GONE);
         }
+    }
+
+    @Override
+    protected void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putString(STATE_SEARCH_QUERY, searchQuery);
+        outState.putInt(STATE_SORT_MODE, sortMode.ordinal());
     }
 
     private void goToLogin() {
@@ -273,6 +293,13 @@ public class MainActivity extends SupanoteActivity implements NoteAdapter.OnNote
                     return true;
                 }
             });
+
+            // Re-open the search bar with the query that was active before the activity was recreated.
+            if (!searchQuery.isEmpty()) {
+                String restored = searchQuery;
+                searchItem.expandActionView();
+                searchView.setQuery(restored, false);
+            }
         }
         return true;
     }

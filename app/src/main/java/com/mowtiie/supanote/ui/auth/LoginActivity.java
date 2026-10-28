@@ -45,7 +45,8 @@ public class LoginActivity extends SupanoteActivity {
         setContentView(binding.getRoot());
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
+            Insets ime = insets.getInsets(WindowInsetsCompat.Type.ime());
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, Math.max(systemBars.bottom, ime.bottom));
             return insets;
         });
 
@@ -73,7 +74,7 @@ public class LoginActivity extends SupanoteActivity {
 
     private void submit(boolean isSignUp) {
         String email = Objects.requireNonNull(binding.emailInput.getText()).toString().trim();
-        String password = Objects.requireNonNull(binding.passwordInput.getText()).toString().trim();
+        String password = Objects.requireNonNull(binding.passwordInput.getText()).toString();
 
         if (email.isEmpty() || password.isEmpty()) {
             Toast.makeText(this, R.string.toast_email_password_required, Toast.LENGTH_SHORT).show();
