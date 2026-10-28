@@ -15,6 +15,8 @@ import com.mowtiie.supanote.data.model.Note;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.TimeZone;
@@ -26,6 +28,7 @@ public class NoteAdapter extends ListAdapter<Note, NoteAdapter.NoteViewHolder> {
     private final OnNoteAction actions;
     private final DateFormat displayFormat = DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT, Locale.getDefault());
     private final SimpleDateFormat isoFormat;
+    private final Map<String, String> dateCache = new HashMap<>();
 
     public NoteAdapter(OnNoteAction actions) {
         super(DIFF);
@@ -77,6 +80,14 @@ public class NoteAdapter extends ListAdapter<Note, NoteAdapter.NoteViewHolder> {
 
     private String formatDate(String iso) {
         if (iso == null || iso.isEmpty()) return "";
+        String cached = dateCache.get(iso);
+        if (cached != null) return cached;
+        String formatted = parseAndFormat(iso);
+        dateCache.put(iso, formatted);
+        return formatted;
+    }
+
+    private String parseAndFormat(String iso) {
         try {
             // Truncate fractional seconds and timezone so the fixed format above parses cleanly.
             String trimmed = iso.length() >= 19 ? iso.substring(0, 19) : iso;

@@ -5,6 +5,7 @@ import android.app.Application;
 import com.mowtiie.supanote.data.local.ConnectionManager;
 import com.mowtiie.supanote.data.local.CrashHandler;
 import com.mowtiie.supanote.data.local.SessionManager;
+import com.mowtiie.supanote.data.model.Note;
 import com.mowtiie.supanote.data.remote.TokenAuthenticator;
 
 import okhttp3.OkHttpClient;
@@ -15,6 +16,9 @@ public class SupanoteApp extends Application {
     private ConnectionManager connection;
     private OkHttpClient httpClient;
     private OkHttpClient authedHttpClient;
+
+    /** The note most recently opened from the list, so the editor does not need it in intent extras. */
+    private volatile Note openedNote;
 
     @Override
     public void onCreate() {
@@ -54,4 +58,13 @@ public class SupanoteApp extends Application {
         return authedHttpClient;
     }
 
+    public void setOpenedNote(Note note) {
+        openedNote = note;
+    }
+
+    /** @return the note handed over by the list if it matches {@code id}, otherwise null. */
+    public Note getOpenedNote(long id) {
+        Note note = openedNote;
+        return note != null && note.getId() == id ? note : null;
+    }
 }

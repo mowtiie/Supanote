@@ -62,10 +62,18 @@ public class NoteViewModel extends AndroidViewModel {
         void onComplete(boolean success);
     }
 
+    public void fetchNote(long id, NoteRepository.Callback<Note> cb) {
+        repo.getNote(id, cb);
+    }
+
     public void addNoteAndAwait(String title, String content, CompletionCallback cb) {
         repo.addNote(title, content, new NoteRepository.Callback<Note>() {
             @Override public void onSuccess(Note note) {
-                loadNotes();
+                if (note != null) {
+                    List<Note> c = currentList();
+                    c.add(0, note);
+                    notes.setValue(c);
+                }
                 cb.onComplete(true);
             }
             @Override public void onError(Exception e) {
@@ -77,8 +85,14 @@ public class NoteViewModel extends AndroidViewModel {
 
     public void updateNoteAndAwait(long id, String title, String content, CompletionCallback cb) {
         repo.updateNote(id, title, content, new NoteRepository.Callback<Note>() {
-            @Override public void onSuccess(Note note) {
-                loadNotes();
+            @Override public void onSuccess(Note updated) {
+                if (updated != null) {
+                    List<Note> c = currentList();
+                    for (int i = 0; i < c.size(); i++) {
+                        if (c.get(i).getId() == updated.getId()) { c.set(i, updated); break; }
+                    }
+                    notes.setValue(c);
+                }
                 cb.onComplete(true);
             }
             @Override public void onError(Exception e) {

@@ -38,8 +38,10 @@ import com.mowtiie.supanote.ui.setup.SetupActivity;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 public class MainActivity extends SupanoteActivity implements NoteAdapter.OnNoteAction {
 
@@ -54,6 +56,7 @@ public class MainActivity extends SupanoteActivity implements NoteAdapter.OnNote
     private ActivityMainBinding binding;
 
     private List<Note> allNotes = new ArrayList<>();
+    private final Map<Long, String> searchIndex = new HashMap<>();
     private String searchQuery = "";
     private Sort sortMode = Sort.NEWEST;
 
@@ -126,6 +129,7 @@ public class MainActivity extends SupanoteActivity implements NoteAdapter.OnNote
 
         noteViewModel.getNotes().observe(this, notes -> {
             allNotes = notes != null ? notes : new ArrayList<>();
+            rebuildSearchIndex();
             if (allNotes.isEmpty()) {
                 if (state != ListState.ERROR) state = ListState.LOADED_EMPTY;
             } else {
@@ -186,9 +190,8 @@ public class MainActivity extends SupanoteActivity implements NoteAdapter.OnNote
             String q = searchQuery.toLowerCase(Locale.getDefault());
             List<Note> filtered = new ArrayList<>();
             for (Note n : result) {
-                String title = n.getTitle() == null ? "" : n.getTitle().toLowerCase(Locale.getDefault());
-                String content = n.getContent() == null ? "" : n.getContent().toLowerCase(Locale.getDefault());
-                if (title.contains(q) || content.contains(q)) filtered.add(n);
+                String haystack = searchIndex.get(n.getId());
+                if (haystack != null && haystack.contains(q)) filtered.add(n);
             }
             result = filtered;
         }
@@ -210,6 +213,16 @@ public class MainActivity extends SupanoteActivity implements NoteAdapter.OnNote
 
         noteAdapter.submitList(result);
         updateEmptyState(result.isEmpty());
+    }
+
+    /** Lower-cased title and content per note, built once per list change instead of on every keystroke. */
+    private void rebuildSearchIndex() {
+        searchIndex.clear();
+        for (Note n : allNotes) {
+            String title = n.getTitle() == null ? "" : n.getTitle();
+            String content = n.getContent() == null ? "" : n.getContent();
+            searchIndex.put(n.getId(), (title + "\n" + content).toLowerCase(Locale.getDefault()));
+        }
     }
 
     private String title(Note n) { return n.getTitle() == null ? "" : n.getTitle(); }
@@ -313,9 +326,9 @@ public class MainActivity extends SupanoteActivity implements NoteAdapter.OnNote
     @Override
     public void onOpen(Note note) {
         Intent intent = new Intent(this, ManageNoteActivity.class);
+        // Only the id travels in the intent (extras are capped at ~1 MB); the editor reads the note from the app.
+        ((SupanoteApp) getApplication()).setOpenedNote(note);
         intent.putExtra(ManageNoteActivity.EXTRA_NOTE_ID, note.getId());
-        intent.putExtra(ManageNoteActivity.EXTRA_NOTE_TITLE, note.getTitle());
-        intent.putExtra(ManageNoteActivity.EXTRA_NOTE_CONTENT, note.getContent());
         startActivity(intent);
     }
 

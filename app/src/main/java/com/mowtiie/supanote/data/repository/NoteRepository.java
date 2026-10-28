@@ -98,6 +98,10 @@ public class NoteRepository {
         });
     }
 
+    public void getNote(long id, Callback<Note> cb) {
+        enqueueSingle(base(rest() + TABLE + "?select=*&id=eq." + id).build(), cb);
+    }
+
     // ---------------------------- CREATE ----------------------------
     public void addNote(String title, String content, Callback<Note> cb) {
         JSONObject obj = new JSONObject();

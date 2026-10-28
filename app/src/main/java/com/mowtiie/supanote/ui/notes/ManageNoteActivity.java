@@ -15,6 +15,9 @@ import androidx.lifecycle.ViewModelProvider;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.mowtiie.supanote.R;
+import com.mowtiie.supanote.SupanoteApp;
+import com.mowtiie.supanote.data.model.Note;
+import com.mowtiie.supanote.data.repository.NoteRepository;
 import com.mowtiie.supanote.databinding.ActivityManageNoteBinding;
 import com.mowtiie.supanote.ui.SupanoteActivity;
 
@@ -25,8 +28,6 @@ public class ManageNoteActivity extends SupanoteActivity {
     private ActivityManageNoteBinding binding;
 
     public static final String EXTRA_NOTE_ID = "extra_note_id";
-    public static final String EXTRA_NOTE_TITLE = "extra_note_title";
-    public static final String EXTRA_NOTE_CONTENT = "extra_note_content";
 
     private NoteViewModel noteViewModel;
 
@@ -65,14 +66,15 @@ public class ManageNoteActivity extends SupanoteActivity {
         Intent intent = getIntent();
         if (intent != null && intent.hasExtra(EXTRA_NOTE_ID)) {
             noteId = intent.getLongExtra(EXTRA_NOTE_ID, -1L);
-            originalTitle = intent.getStringExtra(EXTRA_NOTE_TITLE);
-            originalContent = intent.getStringExtra(EXTRA_NOTE_CONTENT);
-            if (originalTitle == null) originalTitle = "";
-            if (originalContent == null) originalContent = "";
-
             setTitle(R.string.toolbar_title_note_edit);
-            binding.noteInputTitle.setText(originalTitle);
-            binding.noteInputContent.setText(originalContent);
+
+            Note opened = ((SupanoteApp) getApplication()).getOpenedNote(noteId);
+            if (opened != null) {
+                showNote(opened);
+            } else {
+                // The in-memory handoff is gone (e.g. the process was recreated), so load the note again.
+                loadNoteFromServer();
+            }
         } else {
             setTitle(R.string.toolbar_title_note_new);
             binding.noteInputTitle.requestFocus();
@@ -82,6 +84,40 @@ public class ManageNoteActivity extends SupanoteActivity {
             @Override public void handleOnBackPressed() {
                 if (hasUnsavedChanges()) confirmDiscard();
                 else finish();
+            }
+        });
+    }
+
+    private void showNote(Note note) {
+        originalTitle = note.getTitle() == null ? "" : note.getTitle();
+        originalContent = note.getContent() == null ? "" : note.getContent();
+
+        // Do not overwrite text the user (or a state restore) already put in the fields.
+        if (isBlank(binding.noteInputTitle) && isBlank(binding.noteInputContent)) {
+            binding.noteInputTitle.setText(originalTitle);
+            binding.noteInputContent.setText(originalContent);
+        }
+    }
+
+    private boolean isBlank(android.widget.TextView view) {
+        return view.getText() == null || view.getText().length() == 0;
+    }
+
+    private void loadNoteFromServer() {
+        noteViewModel.fetchNote(noteId, new NoteRepository.Callback<Note>() {
+            @Override public void onSuccess(Note note) {
+                if (binding == null || isFinishing()) return;
+                if (note == null) {
+                    Toast.makeText(ManageNoteActivity.this, R.string.toast_note_load_failed, Toast.LENGTH_LONG).show();
+                    finish();
+                    return;
+                }
+                showNote(note);
+            }
+            @Override public void onError(Exception e) {
+                if (binding == null || isFinishing()) return;
+                Toast.makeText(ManageNoteActivity.this, R.string.toast_note_load_failed, Toast.LENGTH_LONG).show();
+                finish();
             }
         });
     }

@@ -50,6 +50,7 @@
     <string name="toast_server_url_not_reached">Could not reach that server. Please check the URL.</string>
     <string name="toast_key_rejected">Key rejected (%1$d): %2$s</string>
     <string name="toast_note_save_failed">Could not save, try again later.</string>
+    <string name="toast_note_load_failed">Could not load the note, try again later.</string>
     <string name="toast_note_delete_failed">Could not delete, try again later.</string>
     <string name="error_server_unreachable">Can\'t reach the server, check your connection.</string>
     <string name="error_generic">Something went wrong.</string>
