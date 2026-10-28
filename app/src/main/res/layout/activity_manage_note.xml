@@ -34,7 +34,7 @@
                 style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Title">
+                android:hint="@string/hint_note_title">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/note_input_title"
@@ -50,7 +50,7 @@
                 android:layout_height="0dp"
                 android:layout_weight="1"
                 android:layout_marginTop="16dp"
-                android:hint="Content">
+                android:hint="@string/hint_note_content">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/note_input_content"

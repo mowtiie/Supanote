@@ -67,6 +67,7 @@
 
     <LinearLayout
         android:id="@+id/loadingIndicator"
+        android:accessibilityLiveRegion="polite"
         android:layout_gravity="center"
         android:gravity="center"
         android:orientation="vertical"
@@ -84,7 +85,7 @@
             android:layout_marginTop="12dp"
             android:fontFamily="sans-serif-medium"
             android:textAlignment="center"
-            android:text="Loading notes..."
+            android:text="@string/label_loading_notes"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"/>
     </LinearLayout>
@@ -96,5 +97,5 @@
         android:layout_gravity="bottom|end"
         android:layout_margin="16dp"
         android:src="@drawable/ic_plus"
-        android:contentDescription="Add note" />
+        android:contentDescription="@string/content_description_add_note" />
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

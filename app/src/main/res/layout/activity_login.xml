@@ -39,7 +39,7 @@
 
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/email_layout"
-            android:hint="Email"
+            android:hint="@string/hint_email"
             android:layout_marginBottom="16dp"
             app:endIconMode="clear_text"
             app:startIconDrawable="@drawable/ic_mail"
@@ -58,7 +58,7 @@
 
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/password_layout"
-            android:hint="Password"
+            android:hint="@string/hint_password"
             app:endIconMode="password_toggle"
             app:startIconDrawable="@drawable/ic_lock"
             android:layout_width="match_parent"
@@ -84,7 +84,7 @@
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/signIn"
-            android:text="Sign in"
+            android:text="@string/button_sign_in"
             android:layout_marginTop="16dp"
             android:layout_marginBottom="4dp"
             android:layout_width="match_parent"
@@ -93,7 +93,7 @@
         <com.google.android.material.button.MaterialButton
             android:id="@+id/signUp"
             style="?attr/borderlessButtonStyle"
-            android:text="Create an account"
+            android:text="@string/button_create_account"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"/>
     </LinearLayout>

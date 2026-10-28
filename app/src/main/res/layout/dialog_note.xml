@@ -11,7 +11,7 @@
 
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/note_layout_title"
-        android:hint="Title"
+        android:hint="@string/hint_note_title"
         android:layout_marginBottom="16dp"
         app:endIconMode="clear_text"
         android:layout_width="match_parent"
@@ -26,7 +26,7 @@
 
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/note_layout_content"
-        android:hint="Content"
+        android:hint="@string/hint_note_content"
         app:endIconMode="clear_text"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">

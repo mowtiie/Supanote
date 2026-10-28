@@ -3,8 +3,8 @@
 
     <!-- Theme list preference -->
     <string-array name="theme_entries">
-        <item>System Default</item>
-        <item>Battery Saving</item>
+        <item>System default</item>
+        <item>Battery saver</item>
         <item>Light</item>
         <item>Dark</item>
     </string-array>
