@@ -6,8 +6,8 @@ import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
+import com.mowtiie.supanote.R;
 import com.mowtiie.supanote.SupanoteApp;
-import com.mowtiie.supanote.data.local.SessionManager;
 import com.mowtiie.supanote.data.model.Note;
 import com.mowtiie.supanote.data.repository.NoteRepository;
 
@@ -93,39 +93,13 @@ public class NoteViewModel extends AndroidViewModel {
                 || e instanceof java.net.ConnectException
                 || e instanceof java.net.SocketTimeoutException
                 || e instanceof java.io.InterruptedIOException) {
-            return "Can't reach the server — check your connection.";
+            return getApplication().getString(R.string.error_server_unreachable);
         }
         String message = e.getMessage();
-        return message == null ? "Something went wrong." : message;
+        return message == null ? getApplication().getString(R.string.error_generic) : message;
     }
 
-    public void addNote(String title, String content) {
-        repo.addNote(title, content, new NoteRepository.Callback<Note>() {
-            @Override public void onSuccess(Note note) {
-                if (note == null) { loadNotes(); return; }
-                List<Note> c = currentList();
-                c.add(0, note);
-                notes.setValue(c);
-            }
-            @Override public void onError(Exception e) { error.setValue(e.getMessage()); }
-        });
-    }
-
-    public void updateNote(long id, String title, String content) {
-        repo.updateNote(id, title, content, new NoteRepository.Callback<Note>() {
-            @Override public void onSuccess(Note updated) {
-                if (updated == null) { loadNotes(); return; }
-                List<Note> c = currentList();
-                for (int i = 0; i < c.size(); i++) {
-                    if (c.get(i).getId() == updated.getId()) { c.set(i, updated); break; }
-                }
-                notes.setValue(c);
-            }
-            @Override public void onError(Exception e) { error.setValue(e.getMessage()); }
-        });
-    }
-
-    public void deleteNote(long id) {
+    public void deleteNoteAndAwait(long id, CompletionCallback cb) {
         repo.deleteNote(id, new NoteRepository.Callback<Void>() {
             @Override public void onSuccess(Void result) {
                 List<Note> c = currentList();
@@ -133,8 +107,12 @@ public class NoteViewModel extends AndroidViewModel {
                     if (c.get(i).getId() == id) { c.remove(i); break; }
                 }
                 notes.setValue(c);
+                cb.onComplete(true);
             }
-            @Override public void onError(Exception e) { error.setValue(e.getMessage()); }
+            @Override public void onError(Exception e) {
+                error.setValue(friendlyError(e));
+                cb.onComplete(false);
+            }
         });
     }
 }

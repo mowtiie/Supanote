@@ -41,10 +41,13 @@
     <string name="toast_import_failed">Import failed</string>
     <string name="toast_import_invalid_file">That file isn\'t a Supanote backup</string>
     <string name="toast_server_url_anon_key_required">Enter both the server URL and anon key</string>
-    <string name="toast_server_url_scheme_required">URL must start with http:// or https://</string>
+    <string name="toast_server_url_scheme_required">URL must start with https://</string>
     <string name="toast_server_url_not_reached">Could not reach that server. Please check the URL.</string>
     <string name="toast_key_rejected">Key rejected ("%d"): %s</string>
     <string name="toast_note_save_failed">Could not save, try again later.</string>
+    <string name="toast_note_delete_failed">Could not delete, try again later.</string>
+    <string name="error_server_unreachable">Can\'t reach the server, check your connection.</string>
+    <string name="error_generic">Something went wrong.</string>
     <string name="toast_email_password_required">Enter email and password</string>
 
     <!-- DIALOG TITLES -->
@@ -52,6 +55,10 @@
     <string name="dialog_title_change_server_confirm">Change server?</string>
     <string name="dialog_title_import_confirm">Import notes?</string>
     <string name="dialog_title_sort">Sort by</string>
+    <string name="sort_newest">Newest first</string>
+    <string name="sort_oldest">Oldest first</string>
+    <string name="sort_title_az">Title (A-Z)</string>
+    <string name="sort_title_za">Title (Z-A)</string>
     <string name="dialog_title_note_delete">Delete note?</string>
     <string name="dialog_title_note_discard_changes">Discard changes?</string>
 

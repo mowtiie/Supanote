@@ -205,7 +205,6 @@ public class SettingsActivity extends SupanoteActivity {
 
         private void exportData() {
             showProgressDialog(R.string.dialog_message_progress_exporting);
-            Context appContext = requireContext().getApplicationContext();
             SupanoteApp app = (SupanoteApp) requireActivity().getApplication();
             NoteRepository repo = new NoteRepository(app.connection(), app.session(), app.authedHttpClient());
 

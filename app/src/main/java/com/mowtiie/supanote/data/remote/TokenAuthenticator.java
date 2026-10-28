@@ -2,7 +2,6 @@ package com.mowtiie.supanote.data.remote;
 
 import androidx.annotation.Nullable;
 
-import com.mowtiie.supanote.BuildConfig;
 import com.mowtiie.supanote.data.local.ConnectionManager;
 import com.mowtiie.supanote.data.local.SessionManager;
 

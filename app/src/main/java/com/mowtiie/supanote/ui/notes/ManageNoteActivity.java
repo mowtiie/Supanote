@@ -158,10 +158,19 @@ public class ManageNoteActivity extends SupanoteActivity {
                 .setTitle(R.string.dialog_title_note_delete)
                 .setMessage(R.string.dialog_message_note_delete)
                 .setPositiveButton(R.string.button_delete, (d, w) -> {
-                    if (noteId != -1L) {
-                        noteViewModel.deleteNote(noteId);
+                    if (noteId == -1L) {
+                        finish();
+                        return;
                     }
-                    finish();
+                    setSaving(true);
+                    noteViewModel.deleteNoteAndAwait(noteId, success -> {
+                        setSaving(false);
+                        if (success) {
+                            finish();
+                        } else {
+                            Toast.makeText(this, R.string.toast_note_delete_failed, Toast.LENGTH_LONG).show();
+                        }
+                    });
                 })
                 .setNegativeButton(R.string.button_cancel, null)
                 .show();

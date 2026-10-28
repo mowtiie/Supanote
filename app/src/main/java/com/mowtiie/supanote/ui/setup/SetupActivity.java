@@ -75,7 +75,7 @@ public class SetupActivity extends SupanoteActivity {
             return;
         }
 
-        if (!url.startsWith("http://") && !url.startsWith("https://")) {
+        if (!url.startsWith("https://")) {
             Toast.makeText(this, R.string.toast_server_url_scheme_required, Toast.LENGTH_SHORT).show();
             return;
         }

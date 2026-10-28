@@ -27,6 +27,7 @@ import com.mowtiie.supanote.data.local.CrashReporter;
 import com.mowtiie.supanote.data.model.Note;
 import com.mowtiie.supanote.databinding.ActivityMainBinding;
 import com.mowtiie.supanote.ui.SupanoteActivity;
+import com.mowtiie.supanote.ui.auth.AuthViewModel;
 import com.mowtiie.supanote.ui.auth.LoginActivity;
 import com.mowtiie.supanote.ui.settings.AboutActivity;
 import com.mowtiie.supanote.ui.settings.SettingsActivity;
@@ -133,6 +134,7 @@ public class MainActivity extends SupanoteActivity implements NoteAdapter.OnNote
 
         noteViewModel.getError().observe(this, msg -> {
             if (msg != null) {
+                if (redirectIfSessionLost()) return;
                 if (allNotes.isEmpty()) state = ListState.ERROR;
                 applyView();
                 noteViewModel.clearError();
@@ -215,9 +217,22 @@ public class MainActivity extends SupanoteActivity implements NoteAdapter.OnNote
         }
     }
 
+    private void goToLogin() {
+        startActivity(new Intent(this, LoginActivity.class));
+        finish();
+    }
+
+    /** The token authenticator clears the session when a refresh is rejected; send the user to login. */
+    private boolean redirectIfSessionLost() {
+        if (((SupanoteApp) getApplication()).session().isLoggedIn()) return false;
+        goToLogin();
+        return true;
+    }
+
     @Override
     protected void onResume() {
         super.onResume();
+        if (redirectIfSessionLost()) return;
         if (skipNextResumeReload) {
             skipNextResumeReload = false;
             return;
@@ -277,9 +292,8 @@ public class MainActivity extends SupanoteActivity implements NoteAdapter.OnNote
         }
 
         if (id == R.id.menu_item_signout) {
-            ((SupanoteApp) getApplication()).session().clear();
-            startActivity(new Intent(this, LoginActivity.class));
-            finish();
+            new ViewModelProvider(this).get(AuthViewModel.class).signOut();
+            goToLogin();
             return true;
         }
 
@@ -292,7 +306,12 @@ public class MainActivity extends SupanoteActivity implements NoteAdapter.OnNote
     }
 
     private void showSortDialog() {
-        String[] labels = { "Newest first", "Oldest first", "Title (A-Z)", "Title (Z-A)" };
+        String[] labels = {
+                getString(R.string.sort_newest),
+                getString(R.string.sort_oldest),
+                getString(R.string.sort_title_az),
+                getString(R.string.sort_title_za)
+        };
         new MaterialAlertDialogBuilder(this)
                 .setTitle(R.string.dialog_title_sort)
                 .setSingleChoiceItems(labels, sortMode.ordinal(), (d, which) -> {

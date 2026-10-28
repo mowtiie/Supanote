@@ -3,7 +3,6 @@ package com.mowtiie.supanote.data.repository;
 import android.os.Handler;
 import android.os.Looper;
 
-import com.mowtiie.supanote.BuildConfig;
 import com.mowtiie.supanote.data.local.ConnectionManager;
 import com.mowtiie.supanote.data.local.SessionManager;
 
@@ -44,6 +43,28 @@ public class AuthRepository {
     }
     public void signIn(String email, String password, Callback cb) {
         post(connection.getBaseUrl() + "/auth/v1/token?grant_type=password", email, password, cb);
+    }
+
+    /** Clears the local session immediately and makes a best-effort call to revoke it server-side. */
+    public void signOut() {
+        String token = session.getAccessToken();
+        String baseUrl = connection.getBaseUrl();
+        String anonKey = connection.getAnonKey();
+        session.clear();
+
+        if (token == null || baseUrl == null || anonKey == null || anonKey.isEmpty()) return;
+
+        Request req = new Request.Builder()
+                .url(baseUrl + "/auth/v1/logout")
+                .addHeader("apikey", anonKey)
+                .addHeader("Authorization", "Bearer " + token)
+                .post(RequestBody.create("", JSON))
+                .build();
+
+        client.newCall(req).enqueue(new okhttp3.Callback() {
+            @Override public void onFailure(Call call, IOException e) { }
+            @Override public void onResponse(Call call, Response res) { res.close(); }
+        });
     }
 
     private void post(String url, String email, String password, Callback cb) {

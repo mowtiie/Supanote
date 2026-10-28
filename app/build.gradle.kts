@@ -34,25 +34,19 @@ android {
         manifestPlaceholders["appIcon"] = "@mipmap/ic_launcher"
         manifestPlaceholders["appRoundIcon"] = "@mipmap/ic_launcher_round"
 
-        val props = Properties()
-        val f = rootProject.file("local.properties")
-        if (f.exists()) {
-            f.inputStream().use { props.load(it) }
-        }
-
-        val supabaseUrl = props.getProperty("SUPABASE_URL") ?: ""
-        val supabaseKey = props.getProperty("SUPABASE_KEY") ?: ""
-
-        buildConfigField("String", "SUPABASE_URL", "\"$supabaseUrl\"")
-        buildConfigField("String", "SUPABASE_KEY", "\"$supabaseKey\"")
+        // Dev pre-fill values are only injected into debug builds (see buildTypes.debug).
+        buildConfigField("String", "SUPABASE_URL", "\"\"")
+        buildConfigField("String", "SUPABASE_KEY", "\"\"")
     }
 
-    signingConfigs {
-        create("release") {
-            keyAlias = keystoreProperties["keyAlias"] as String
-            keyPassword = keystoreProperties["keyPassword"] as String
-            storeFile = file(keystoreProperties["storeFile"] as String)
-            storePassword = keystoreProperties["storePassword"] as String
+    if (keystorePropertiesFile.exists()) {
+        signingConfigs {
+            create("release") {
+                keyAlias = keystoreProperties["keyAlias"] as String
+                keyPassword = keystoreProperties["keyPassword"] as String
+                storeFile = file(keystoreProperties["storeFile"] as String)
+                storePassword = keystoreProperties["storePassword"] as String
+            }
         }
     }
 
@@ -60,7 +54,9 @@ android {
         release {
             isMinifyEnabled = true
             isShrinkResources = true
-            signingConfig = signingConfigs.getByName("release")
+            if (keystorePropertiesFile.exists()) {
+                signingConfig = signingConfigs.getByName("release")
+            }
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -73,6 +69,14 @@ android {
             isShrinkResources = false
             applicationIdSuffix = ".debug"
             versionNameSuffix = "-debug"
+
+            val props = Properties()
+            val localProps = rootProject.file("local.properties")
+            if (localProps.exists()) {
+                localProps.inputStream().use { props.load(it) }
+            }
+            buildConfigField("String", "SUPABASE_URL", "\"${props.getProperty("SUPABASE_URL") ?: ""}\"")
+            buildConfigField("String", "SUPABASE_KEY", "\"${props.getProperty("SUPABASE_KEY") ?: ""}\"")
         }
     }
 

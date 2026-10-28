@@ -39,6 +39,10 @@ public class AuthViewModel extends AndroidViewModel {
         repo.signUp(email, password, cb());
     }
 
+    public void signOut() {
+        repo.signOut();
+    }
+
     private AuthRepository.Callback cb() {
         return new AuthRepository.Callback() {
             @Override public void onSuccess() {
