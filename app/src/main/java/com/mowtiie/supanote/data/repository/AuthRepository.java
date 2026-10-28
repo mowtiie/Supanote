@@ -8,6 +8,7 @@ import android.os.Looper;
 import com.mowtiie.supanote.R;
 import com.mowtiie.supanote.data.local.ConnectionManager;
 import com.mowtiie.supanote.data.local.SessionManager;
+import com.mowtiie.supanote.data.remote.NetworkErrors;
 
 import org.json.JSONObject;
 
@@ -83,7 +84,7 @@ public class AuthRepository {
         try {
             body.put("email", email);
             body.put("password", password);
-        } catch (Exception e) { cb.onError(e.getMessage()); return; }
+        } catch (Exception e) { cb.onError(describe(e)); return; }
 
         Request req = new Request.Builder()
                 .url(url)
@@ -94,7 +95,7 @@ public class AuthRepository {
 
         client.newCall(req).enqueue(new okhttp3.Callback() {
             @Override public void onFailure(Call call, IOException e) {
-                main.post(() -> cb.onError(e.getMessage()));
+                main.post(() -> cb.onError(describe(e)));
             }
             @Override public void onResponse(Call call, Response res) {
                 try (ResponseBody b = res.body()) {
@@ -111,10 +112,17 @@ public class AuthRepository {
                     session.saveSession(obj);
                     main.post(cb::onSuccess);
                 } catch (Exception e) {
-                    main.post(() -> cb.onError(e.getMessage()));
+                    main.post(() -> cb.onError(describe(e)));
                 }
             }
         });
+    }
+
+    /** A message for the user instead of the exception text (which reads like "Unable to resolve host ..."). */
+    private String describe(Exception e) {
+        if (NetworkErrors.isConnectivityProblem(e)) return resources.getString(R.string.error_server_unreachable);
+        if (NetworkErrors.isSecureConnectionProblem(e)) return resources.getString(R.string.error_secure_connection);
+        return resources.getString(R.string.error_generic_try_again);
     }
 
     private String friendlyError(String json) {

@@ -1,9 +1,9 @@
 package com.mowtiie.supanote.ui.auth;
 
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
-import android.view.inputmethod.EditorInfo;
 
 import androidx.activity.EdgeToEdge;
 import androidx.core.graphics.Insets;
@@ -14,7 +14,9 @@ import androidx.lifecycle.ViewModelProvider;
 import com.google.android.material.snackbar.Snackbar;
 import com.mowtiie.supanote.R;
 import com.mowtiie.supanote.SupanoteApp;
+import com.mowtiie.supanote.data.Validators;
 import com.mowtiie.supanote.databinding.ActivityLoginBinding;
+import com.mowtiie.supanote.ui.ImeActions;
 import com.mowtiie.supanote.ui.SupanoteActivity;
 import com.mowtiie.supanote.ui.notes.MainActivity;
 import com.mowtiie.supanote.ui.setup.SetupActivity;
@@ -74,12 +76,27 @@ public class LoginActivity extends SupanoteActivity {
         binding.signIn.setOnClickListener(v -> submit(false));
         binding.signUp.setOnClickListener(v -> submit(true));
         binding.passwordInput.setOnEditorActionListener((v, actionId, event) -> {
-            if (actionId == EditorInfo.IME_ACTION_DONE) {
+            if (ImeActions.isSubmit(actionId, event)) {
                 submit(false);
                 return true;
             }
             return false;
         });
+
+        // Show which server this login goes to, and let the user fix a wrong one without signing in first.
+        binding.serverLabel.setText(getString(R.string.label_login_server, serverHost()));
+        binding.changeServer.setOnClickListener(v -> {
+            ((SupanoteApp) getApplication()).connection().clear();
+            Intent intent = new Intent(this, SetupActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            startActivity(intent);
+        });
+    }
+
+    private String serverHost() {
+        String baseUrl = ((SupanoteApp) getApplication()).connection().getBaseUrl();
+        String host = baseUrl == null ? null : Uri.parse(baseUrl).getHost();
+        return host != null ? host : String.valueOf(baseUrl);
     }
 
     private void submit(boolean isSignUp) {
@@ -91,6 +108,11 @@ public class LoginActivity extends SupanoteActivity {
 
         if (email.isEmpty()) {
             binding.emailLayout.setError(getString(R.string.error_field_required));
+            binding.emailInput.requestFocus();
+            return;
+        }
+        if (!Validators.isPlausibleEmail(email)) {
+            binding.emailLayout.setError(getString(R.string.error_email_invalid));
             binding.emailInput.requestFocus();
             return;
         }

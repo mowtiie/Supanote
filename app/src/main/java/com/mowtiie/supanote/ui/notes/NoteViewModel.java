@@ -9,6 +9,7 @@ import androidx.lifecycle.MutableLiveData;
 import com.mowtiie.supanote.R;
 import com.mowtiie.supanote.SupanoteApp;
 import com.mowtiie.supanote.data.model.Note;
+import com.mowtiie.supanote.data.remote.NetworkErrors;
 import com.mowtiie.supanote.data.repository.NoteRepository;
 
 import org.jspecify.annotations.NonNull;
@@ -125,11 +126,11 @@ public class NoteViewModel extends AndroidViewModel {
     }
 
     private String friendlyError(Exception e) {
-        if (e instanceof java.net.UnknownHostException
-                || e instanceof java.net.ConnectException
-                || e instanceof java.net.SocketTimeoutException
-                || e instanceof java.io.InterruptedIOException) {
+        if (NetworkErrors.isConnectivityProblem(e)) {
             return getApplication().getString(R.string.error_server_unreachable);
+        }
+        if (NetworkErrors.isSecureConnectionProblem(e)) {
+            return getApplication().getString(R.string.error_secure_connection);
         }
         String message = e.getMessage();
         return message == null ? getApplication().getString(R.string.error_generic) : message;

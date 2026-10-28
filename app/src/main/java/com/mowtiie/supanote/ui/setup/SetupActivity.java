@@ -5,7 +5,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.view.View;
-import android.view.inputmethod.EditorInfo;
 
 import androidx.activity.EdgeToEdge;
 import androidx.core.graphics.Insets;
@@ -16,6 +15,7 @@ import com.mowtiie.supanote.BuildConfig;
 import com.mowtiie.supanote.R;
 import com.mowtiie.supanote.SupanoteApp;
 import com.mowtiie.supanote.databinding.ActivitySetupBinding;
+import com.mowtiie.supanote.ui.ImeActions;
 import com.mowtiie.supanote.ui.SupanoteActivity;
 import com.mowtiie.supanote.ui.auth.LoginActivity;
 import com.mowtiie.supanote.ui.notes.MainActivity;
@@ -72,7 +72,7 @@ public class SetupActivity extends SupanoteActivity {
 
         binding.connect.setOnClickListener(v -> connect());
         binding.publishableKeyInput.setOnEditorActionListener((v, actionId, event) -> {
-            if (actionId == EditorInfo.IME_ACTION_DONE) {
+            if (ImeActions.isSubmit(actionId, event)) {
                 connect();
                 return true;
             }
