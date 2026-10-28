@@ -21,6 +21,7 @@ public class ExampleInstrumentedTest {
     public void useAppContext() {
         // Context of the app under test.
         Context appContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
-        assertEquals("com.mowtiie.supanote", appContext.getPackageName());
+        // Debug builds add an applicationIdSuffix, so only the prefix is stable.
+        assertTrue(appContext.getPackageName().startsWith("com.mowtiie.supanote"));
     }
 }

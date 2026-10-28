@@ -1,14 +1,9 @@
 package com.mowtiie.supanote.data.local;
 
 import android.content.Context;
-import android.content.SharedPreferences;
-
-import androidx.security.crypto.EncryptedSharedPreferences;
-import androidx.security.crypto.MasterKey;
 
 import org.json.JSONObject;
 
-import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.util.HashMap;
 import java.util.Map;
@@ -16,7 +11,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class SessionManager {
 
-    private static final String PREFS = "supabase_session_secure";
+    private static final String PREFS = "supabase_session_v2";
+    private static final String KEY_ALIAS = "supanote_session_key";
     private static final String K_ACCESS = "access_token";
     private static final String K_REFRESH = "refresh_token";
     private static final String K_EMAIL = "user_email";
@@ -27,7 +23,7 @@ public class SessionManager {
     private final Map<String, String> cache = new ConcurrentHashMap<>();
 
     /** Encrypted storage, or null if the device keystore is unusable (the session then lasts until the process dies). */
-    private SharedPreferences prefs;
+    private SecureStorage storage;
     private boolean opened;
 
     public SessionManager(Context context) {
@@ -39,43 +35,32 @@ public class SessionManager {
         storage();
     }
 
-    private synchronized SharedPreferences storage() {
+    private synchronized SecureStorage storage() {
         if (!opened) {
             opened = true;
-            prefs = buildEncryptedPrefs(appContext);
-            if (prefs != null) {
+            storage = openStorage();
+            if (storage != null) {
                 for (String key : new String[]{K_ACCESS, K_REFRESH, K_EMAIL}) {
-                    String value = prefs.getString(key, null);
+                    String value = storage.get(key);
                     if (value != null) cache.put(key, value);
                 }
             }
         }
-        return prefs;
+        return storage;
     }
 
-    private static SharedPreferences buildEncryptedPrefs(Context context) {
+    private SecureStorage openStorage() {
         try {
-            return create(context);
-        } catch (GeneralSecurityException | IOException e) {
-            context.deleteSharedPreferences(PREFS);
+            return SecureStorage.open(appContext, PREFS, KEY_ALIAS);
+        } catch (GeneralSecurityException first) {
+            // A broken keystore entry is the usual cause; start over with a fresh key (this signs the user out).
+            SecureStorage.destroy(appContext, PREFS, KEY_ALIAS);
             try {
-                return create(context);
-            } catch (GeneralSecurityException | IOException retry) {
+                return SecureStorage.open(appContext, PREFS, KEY_ALIAS);
+            } catch (GeneralSecurityException second) {
                 return null;
             }
         }
-    }
-
-    private static SharedPreferences create(Context context) throws GeneralSecurityException, IOException {
-        MasterKey masterKey = new MasterKey.Builder(context)
-                .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
-                .build();
-        return EncryptedSharedPreferences.create(
-                context,
-                PREFS,
-                masterKey,
-                EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-                EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM);
     }
 
     private String get(String key) {
@@ -83,19 +68,22 @@ public class SessionManager {
         return cache.get(key);
     }
 
-    private void putAll(Map<String, String> values) {
-        SharedPreferences p = storage();
-        SharedPreferences.Editor editor = p != null ? p.edit() : null;
+    private synchronized void putAll(Map<String, String> values) {
+        SecureStorage store = storage();
         for (Map.Entry<String, String> entry : values.entrySet()) {
             if (entry.getValue() == null) {
                 cache.remove(entry.getKey());
-                if (editor != null) editor.remove(entry.getKey());
             } else {
                 cache.put(entry.getKey(), entry.getValue());
-                if (editor != null) editor.putString(entry.getKey(), entry.getValue());
             }
         }
-        if (editor != null) editor.apply();
+
+        if (store == null) return;
+        try {
+            store.putAll(values);
+        } catch (GeneralSecurityException e) {
+            // Could not persist; the session still works for this process.
+        }
     }
 
     public void saveSession(JSONObject session) {
@@ -131,8 +119,8 @@ public class SessionManager {
     }
 
     public void clear() {
-        SharedPreferences p = storage();
+        SecureStorage store = storage();
         cache.clear();
-        if (p != null) p.edit().clear().apply();
+        if (store != null) store.clear();
     }
 }
