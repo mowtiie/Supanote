@@ -99,6 +99,15 @@ public class NoteViewModel extends AndroidViewModel {
         return message == null ? getApplication().getString(R.string.error_generic) : message;
     }
 
+    /** Hides a note locally (e.g. while an undo window is open) without touching the server. */
+    public void removeFromList(long id) {
+        List<Note> c = currentList();
+        for (int i = 0; i < c.size(); i++) {
+            if (c.get(i).getId() == id) { c.remove(i); break; }
+        }
+        notes.setValue(c);
+    }
+
     public void deleteNoteAndAwait(long id, CompletionCallback cb) {
         repo.deleteNote(id, new NoteRepository.Callback<Void>() {
             @Override public void onSuccess(Void result) {

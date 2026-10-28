@@ -81,6 +81,10 @@
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/server_url_input"
+                android:inputType="textUri"
+                android:maxLines="1"
+                android:imeOptions="actionNext"
+                android:autofillHints="url"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"/>
         </com.google.android.material.textfield.TextInputLayout>
@@ -95,9 +99,20 @@
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/publishable_key_input"
+                android:inputType="textNoSuggestions"
+                android:maxLines="1"
+                android:imeOptions="actionDone"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"/>
         </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.progressindicator.LinearProgressIndicator
+            android:id="@+id/progress"
+            android:layout_marginTop="16dp"
+            android:indeterminate="true"
+            android:visibility="invisible"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/connect"

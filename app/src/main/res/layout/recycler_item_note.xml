@@ -46,6 +46,6 @@
             android:layout_marginTop="8dp"
             android:fontFamily="sans-serif"
             android:textColor="?attr/colorOnSurfaceVariant"
-            android:textAppearance="?attr/textAppearanceBodyMedium"/>
+            android:textAppearance="?attr/textAppearanceLabelMedium"/>
     </LinearLayout>
 </com.google.android.material.card.MaterialCardView>

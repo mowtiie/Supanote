@@ -4,7 +4,8 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
-import android.widget.Toast;
+import android.view.View;
+import android.view.inputmethod.EditorInfo;
 
 import androidx.activity.EdgeToEdge;
 import androidx.core.graphics.Insets;
@@ -64,6 +65,13 @@ public class SetupActivity extends SupanoteActivity {
         }
 
         binding.connect.setOnClickListener(v -> connect());
+        binding.publishableKeyInput.setOnEditorActionListener((v, actionId, event) -> {
+            if (actionId == EditorInfo.IME_ACTION_DONE) {
+                connect();
+                return true;
+            }
+            return false;
+        });
     }
 
     private void connect() {
@@ -71,13 +79,24 @@ public class SetupActivity extends SupanoteActivity {
         String key = Objects.requireNonNull(binding.publishableKeyInput.getText()).toString().trim();
         if (url.endsWith("/")) url = url.substring(0, url.length() - 1);
 
-        if (url.isEmpty() || key.isEmpty()) {
-            Toast.makeText(this, R.string.toast_server_url_anon_key_required, Toast.LENGTH_SHORT).show();
+        binding.serverUrlLayout.setError(null);
+        binding.publishableKeyLayout.setError(null);
+
+        if (url.isEmpty()) {
+            binding.serverUrlLayout.setError(getString(R.string.error_field_required));
+            binding.serverUrlInput.requestFocus();
             return;
         }
 
         if (!url.startsWith("https://")) {
-            Toast.makeText(this, R.string.toast_server_url_scheme_required, Toast.LENGTH_SHORT).show();
+            binding.serverUrlLayout.setError(getString(R.string.toast_server_url_scheme_required));
+            binding.serverUrlInput.requestFocus();
+            return;
+        }
+
+        if (key.isEmpty()) {
+            binding.publishableKeyLayout.setError(getString(R.string.error_field_required));
+            binding.publishableKeyInput.requestFocus();
             return;
         }
 
@@ -95,7 +114,7 @@ public class SetupActivity extends SupanoteActivity {
             @Override public void onFailure(Call call, IOException e) {
                 main.post(() -> {
                     setLoading(false);
-                    Toast.makeText(SetupActivity.this, R.string.toast_server_url_not_reached, Toast.LENGTH_SHORT).show();
+                    binding.serverUrlLayout.setError(getString(R.string.toast_server_url_not_reached));
                 });
             }
             @Override public void onResponse(Call call, Response res) {
@@ -106,7 +125,7 @@ public class SetupActivity extends SupanoteActivity {
                 main.post(() -> {
                     setLoading(false);
                     if (code == 401 || code == 403) {
-                        Toast.makeText(SetupActivity.this, String.format(getString(R.string.toast_key_rejected), code, shorten(fBody)), Toast.LENGTH_SHORT).show();
+                        binding.publishableKeyLayout.setError(getString(R.string.toast_key_rejected, code, shorten(fBody)));
                     } else {
                         ((SupanoteApp) getApplication()).connection().save(fUrl, fKey);
                         goToLogin();
@@ -126,6 +145,7 @@ public class SetupActivity extends SupanoteActivity {
 
     private void setLoading(boolean loading) {
         binding.connect.setEnabled(!loading);
+        binding.progress.setVisibility(loading ? View.VISIBLE : View.INVISIBLE);
     }
 
     private void goToLogin() {

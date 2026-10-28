@@ -2,7 +2,8 @@ package com.mowtiie.supanote.ui.auth;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.widget.Toast;
+import android.view.View;
+import android.view.inputmethod.EditorInfo;
 
 import androidx.activity.EdgeToEdge;
 import androidx.core.graphics.Insets;
@@ -10,6 +11,7 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.lifecycle.ViewModelProvider;
 
+import com.google.android.material.snackbar.Snackbar;
 import com.mowtiie.supanote.R;
 import com.mowtiie.supanote.SupanoteApp;
 import com.mowtiie.supanote.databinding.ActivityLoginBinding;
@@ -55,11 +57,12 @@ public class LoginActivity extends SupanoteActivity {
         authViewModel.getLoading().observe(this, l -> {
             binding.signIn.setEnabled(!l);
             binding.signUp.setEnabled(!l);
+            binding.progress.setVisibility(l ? View.VISIBLE : View.INVISIBLE);
         });
 
         authViewModel.getError().observe(this, msg -> {
             if (msg != null) {
-                Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
+                Snackbar.make(binding.getRoot(), msg, Snackbar.LENGTH_LONG).show();
                 authViewModel.clearError();
             }
         });
@@ -70,14 +73,30 @@ public class LoginActivity extends SupanoteActivity {
 
         binding.signIn.setOnClickListener(v -> submit(false));
         binding.signUp.setOnClickListener(v -> submit(true));
+        binding.passwordInput.setOnEditorActionListener((v, actionId, event) -> {
+            if (actionId == EditorInfo.IME_ACTION_DONE) {
+                submit(false);
+                return true;
+            }
+            return false;
+        });
     }
 
     private void submit(boolean isSignUp) {
         String email = Objects.requireNonNull(binding.emailInput.getText()).toString().trim();
         String password = Objects.requireNonNull(binding.passwordInput.getText()).toString();
 
-        if (email.isEmpty() || password.isEmpty()) {
-            Toast.makeText(this, R.string.toast_email_password_required, Toast.LENGTH_SHORT).show();
+        binding.emailLayout.setError(null);
+        binding.passwordLayout.setError(null);
+
+        if (email.isEmpty()) {
+            binding.emailLayout.setError(getString(R.string.error_field_required));
+            binding.emailInput.requestFocus();
+            return;
+        }
+        if (password.isEmpty()) {
+            binding.passwordLayout.setError(getString(R.string.error_field_required));
+            binding.passwordInput.requestFocus();
             return;
         }
         if (isSignUp) {

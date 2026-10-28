@@ -48,6 +48,8 @@
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/email_input"
+                android:autofillHints="emailAddress"
+                android:imeOptions="actionNext"
                 android:inputType="textEmailAddress"
                 android:maxLines="1"
                 android:layout_width="match_parent"
@@ -64,11 +66,21 @@
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/password_input"
+                android:autofillHints="password"
+                android:imeOptions="actionDone"
                 android:inputType="textPassword"
                 android:maxLines="1"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"/>
         </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.progressindicator.LinearProgressIndicator
+            android:id="@+id/progress"
+            android:layout_marginTop="16dp"
+            android:indeterminate="true"
+            android:visibility="invisible"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/signIn"

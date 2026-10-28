@@ -24,7 +24,7 @@ public class NoteAdapter extends ListAdapter<Note, NoteAdapter.NoteViewHolder> {
     public interface OnNoteAction { void onOpen(Note note); }
 
     private final OnNoteAction actions;
-    private final DateFormat displayFormat = DateFormat.getDateInstance(DateFormat.MEDIUM, Locale.getDefault());
+    private final DateFormat displayFormat = DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT, Locale.getDefault());
     private final SimpleDateFormat isoFormat;
 
     public NoteAdapter(OnNoteAction actions) {

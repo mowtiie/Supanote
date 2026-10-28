@@ -18,9 +18,12 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.google.android.material.snackbar.Snackbar;
 import com.mowtiie.supanote.R;
 import com.mowtiie.supanote.SupanoteApp;
 import com.mowtiie.supanote.data.local.CrashReporter;
@@ -41,7 +44,6 @@ import java.util.Locale;
 public class MainActivity extends SupanoteActivity implements NoteAdapter.OnNoteAction {
 
     private static final String STATE_SEARCH_QUERY = "state_search_query";
-    private static final String STATE_SORT_MODE = "state_sort_mode";
 
     private enum Sort { NEWEST, OLDEST, TITLE_AZ, TITLE_ZA }
     private enum ListState { LOADING, LOADED_EMPTY, LOADED_WITH_NOTES, ERROR }
@@ -58,6 +60,7 @@ public class MainActivity extends SupanoteActivity implements NoteAdapter.OnNote
     private boolean isLoading = false;
     private boolean firstLoadDone = false;
     private boolean skipNextResumeReload = true;
+    private Note pendingDelete;
 
     private final ActivityResultLauncher<Intent> saveCrashLauncher =
             registerForActivityResult(new ActivityResultContracts.StartActivityForResult(),
@@ -98,8 +101,11 @@ public class MainActivity extends SupanoteActivity implements NoteAdapter.OnNote
         firstLoadDone = savedInstanceState != null;
         if (savedInstanceState != null) {
             searchQuery = savedInstanceState.getString(STATE_SEARCH_QUERY, "");
-            int savedSort = savedInstanceState.getInt(STATE_SORT_MODE, Sort.NEWEST.ordinal());
-            if (savedSort >= 0 && savedSort < Sort.values().length) sortMode = Sort.values()[savedSort];
+        }
+        try {
+            sortMode = Sort.valueOf(preferenceUtil.getSortMode());
+        } catch (IllegalArgumentException ignored) {
+            sortMode = Sort.NEWEST;
         }
 
         EdgeToEdge.enable(this);
@@ -149,6 +155,17 @@ public class MainActivity extends SupanoteActivity implements NoteAdapter.OnNote
                 noteViewModel.clearError();
             }
         });
+
+        new ItemTouchHelper(new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT) {
+            @Override public boolean onMove(@NonNull RecyclerView rv, @NonNull RecyclerView.ViewHolder vh, @NonNull RecyclerView.ViewHolder target) {
+                return false;
+            }
+            @Override public void onSwiped(@NonNull RecyclerView.ViewHolder vh, int direction) {
+                int pos = vh.getBindingAdapterPosition();
+                if (pos == RecyclerView.NO_POSITION) return;
+                deleteWithUndo(noteAdapter.getCurrentList().get(pos));
+            }
+        }).attachToRecyclerView(binding.notesRecycler);
 
         binding.emptyStateRetry.setOnClickListener(v -> noteViewModel.loadNotes());
         binding.fabAdd.setOnClickListener(v -> startActivity(new Intent(this, ManageNoteActivity.class)));
@@ -234,7 +251,40 @@ public class MainActivity extends SupanoteActivity implements NoteAdapter.OnNote
     protected void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putString(STATE_SEARCH_QUERY, searchQuery);
-        outState.putInt(STATE_SORT_MODE, sortMode.ordinal());
+    }
+
+    private void deleteWithUndo(Note note) {
+        commitPendingDelete();
+        pendingDelete = note;
+        noteViewModel.removeFromList(note.getId());
+
+        Snackbar.make(binding.getRoot(), R.string.snackbar_note_deleted, Snackbar.LENGTH_LONG)
+                .setAction(R.string.button_undo, v -> {
+                    pendingDelete = null;
+                    noteViewModel.loadNotes();
+                })
+                .addCallback(new Snackbar.Callback() {
+                    @Override public void onDismissed(Snackbar bar, int event) {
+                        if (event != DISMISS_EVENT_ACTION) commitPendingDelete();
+                    }
+                })
+                .show();
+    }
+
+    /** Sends the delete for a swiped-away note once its undo window closes (or earlier if the screen is left). */
+    private void commitPendingDelete() {
+        Note note = pendingDelete;
+        if (note == null) return;
+        pendingDelete = null;
+        noteViewModel.deleteNoteAndAwait(note.getId(), success -> {
+            if (!success) noteViewModel.loadNotes();
+        });
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        if (noteViewModel != null) commitPendingDelete();
     }
 
     private void goToLogin() {
@@ -319,8 +369,16 @@ public class MainActivity extends SupanoteActivity implements NoteAdapter.OnNote
         }
 
         if (id == R.id.menu_item_signout) {
-            new ViewModelProvider(this).get(AuthViewModel.class).signOut();
-            goToLogin();
+            new MaterialAlertDialogBuilder(this)
+                    .setTitle(R.string.dialog_title_sign_out)
+                    .setMessage(R.string.dialog_message_sign_out)
+                    .setPositiveButton(R.string.menu_sign_out, (d, w) -> {
+                        commitPendingDelete();
+                        new ViewModelProvider(this).get(AuthViewModel.class).signOut();
+                        goToLogin();
+                    })
+                    .setNegativeButton(R.string.button_cancel, null)
+                    .show();
             return true;
         }
 
@@ -343,6 +401,7 @@ public class MainActivity extends SupanoteActivity implements NoteAdapter.OnNote
                 .setTitle(R.string.dialog_title_sort)
                 .setSingleChoiceItems(labels, sortMode.ordinal(), (d, which) -> {
                     sortMode = Sort.values()[which];
+                    preferenceUtil.setSortMode(sortMode.name());
                     applyView();
                     d.dismiss();
                 })

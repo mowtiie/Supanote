@@ -40,6 +40,14 @@ public class PreferenceUtil {
         sharedPreferences.edit().putString("contrast", value).apply();
     }
 
+    public String getSortMode() {
+        return sharedPreferences.getString("sort_mode", "NEWEST");
+    }
+
+    public void setSortMode(String value) {
+        sharedPreferences.edit().putString("sort_mode", value).apply();
+    }
+
     public void setScreenPrivacy(boolean value) {
         sharedPreferences.edit().putBoolean("screen_privacy", value).apply();
     }
