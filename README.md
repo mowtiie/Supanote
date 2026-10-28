@@ -18,8 +18,9 @@ Supanote is a simple, open-source notes app that connects to your own Supabase b
 * **Bring your own backend:** Connect to any Supabase project, Cloud or self-hosted, by entering your project URL and publishable key on first launch. Nothing is hardcoded or tied to one server, and you can switch servers anytime from Settings.
 * **Private from other users:** Each account only ever sees its own notes, enforced by Row Level Security on the database itself.
 * **Secure session storage:** Login sessions are kept in encrypted on-device storage, with automatic token refresh so you stay signed in.
-* **Search and sorting:** Filter notes by title or content from the toolbar, and sort by newest, oldest, or title. Your sort choice is remembered.
-* **Quick delete with undo:** Swipe a note away to delete it, and tap Undo within a few seconds to bring it back.
+* **Search and sorting:** Filter notes by title or content from the toolbar, and sort by newest, oldest, or title. Your sort choice is remembered. Pull down on the list to refresh.
+* **Quick delete with undo:** Swipe a note away to delete it, and tap Undo within a few seconds to bring it back. Long-pressing a note (or the Delete action in TalkBack) asks for confirmation first.
+* **Edited time:** Notes show when they were last edited (after you upgrade your database with the latest `schema.sql`).
 * **Backup:** Export your notes to a JSON file and import them back in.
 * **Dedicated editor:** A full-screen editor with a discard-changes safeguard so you never lose work by accident.
 * **Appearance and privacy:** Light, dark, and battery-saver themes, three contrast levels, dynamic colors on supported devices, and an optional screen privacy mode that blocks screenshots and screen recordings.
@@ -46,12 +47,12 @@ Supanote is a simple, open-source notes app that connects to your own Supabase b
 Supanote needs a Supabase backend to talk to. Setting one up takes a few minutes:
 
 1. Create a free project at [supabase.com](https://supabase.com) (or run your own self-hosted instance).
-2. Open the **SQL Editor** and run [`schema.sql`](schema.sql) from this repo to create the `notes` table and its Row Level Security policies.
+2. Open the **SQL Editor** and run [`schema.sql`](schema.sql) from this repo to create the `notes` table, its Row Level Security policies, and the edit-time trigger. The script is safe to run again, so run it again whenever you update Supanote to pick up database changes.
 3. Under **Authentication → Sign In / Providers**, enable **Email**. For the easiest setup, turn off **Confirm email**. If you leave it on, new users must confirm their address by email before they can sign in, which requires working email delivery on your project.
-4. Grab your **Project URL** and **anon / publishable key** from your project's **API Keys** settings.
+4. Copy your **Project URL** and **publishable key**. The easiest place is your project's **Connect** dialog; the keys are also listed under **Settings → API Keys**. Legacy `anon` keys still work, but Supabase is deprecating them by the end of 2026, so prefer the publishable key (`sb_publishable_...`).
 5. Open Supanote, paste in your URL and key on the setup screen, then create an account.
 
-**Only use the anon / publishable key.** Never paste a `service_role` or secret key into the app. It bypasses Row Level Security and would give anyone with the app full access to your database.
+**Only use the publishable (or legacy anon) key.** Never paste a secret or `service_role` key into the app. It bypasses Row Level Security and would give anyone with the app full access to your database.
 
 You can change servers anytime from **Settings → Change server**.
 
@@ -60,6 +61,7 @@ You can change servers anytime from **Settings → Change server**.
 * Supanote has no analytics or telemetry. It only talks to the server you configure.
 * Notes are **not end-to-end encrypted**. They are stored in your database, so whoever runs the server can read them. Row Level Security only keeps other users out.
 * Importing a backup always adds new notes. Importing the same file twice creates duplicates, and original creation dates are not preserved.
+* Supanote hides its content from the Recents screen on Android 13 and later. Blocking screenshots and screen recordings is a separate **Screen privacy** setting that is off by default.
 * Not included: offline mode, folders, tags, archive, trash, and end-to-end encryption.
 
 ## Verification
@@ -144,7 +146,7 @@ Without that file, `assembleRelease` produces an unsigned APK.
 
 ## Contributing
 
-Issues and pull requests are welcome. If you're filing a bug, please include your Android version and the steps to reproduce. Before opening a pull request, make sure `./gradlew assembleDebug lintDebug` passes. For release steps, see [RELEASING.md](RELEASING.md).
+Issues and pull requests are welcome. If you're filing a bug, please include your Android version and the steps to reproduce. Before opening a pull request, make sure `./gradlew assembleDebug lintDebug testDebugUnitTest` passes. Tests for the Keystore storage and the backup format run on a device or emulator with `./gradlew connectedDebugAndroidTest`. For release steps, see [RELEASING.md](RELEASING.md).
 
 ## License
 
