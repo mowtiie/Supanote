@@ -8,6 +8,8 @@ material = "1.14.0"
 activityKtx = "1.13.0"
 constraintlayout = "2.2.1"
 okhttp = "4.12.0"
+mockito = "5.14.2"
+orgJson = "20240303"
 preference = "1.2.1"
 
 [libraries]
@@ -19,6 +21,9 @@ material = { group = "com.google.android.material", name = "material", version.r
 activity-ktx = { group = "androidx.activity", name = "activity-ktx", version.ref = "activityKtx" }
 constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayout", version.ref = "constraintlayout" }
 okhttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttp" }
+mockwebserver = { module = "com.squareup.okhttp3:mockwebserver", version.ref = "okhttp" }
+mockito-core = { group = "org.mockito", name = "mockito-core", version.ref = "mockito" }
+org-json = { group = "org.json", name = "json", version.ref = "orgJson" }
 preference = { group = "androidx.preference", name = "preference", version.ref = "preference" }
 
 [plugins]
