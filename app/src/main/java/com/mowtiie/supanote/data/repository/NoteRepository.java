@@ -7,6 +7,7 @@ import android.os.Looper;
 import com.mowtiie.supanote.data.local.ConnectionManager;
 import com.mowtiie.supanote.data.local.SessionManager;
 import com.mowtiie.supanote.data.model.Note;
+import com.mowtiie.supanote.data.model.Tags;
 import com.mowtiie.supanote.data.remote.ApiException;
 import com.mowtiie.supanote.data.remote.ServerFeatures;
 
@@ -65,6 +66,11 @@ public class NoteRepository {
                 JSONObject clean = new JSONObject();
                 clean.put("title", title);
                 clean.put("content", src.isNull("content") ? "" : src.optString("content", ""));
+                JSONArray tags = src.optJSONArray("tags");
+                if (tags != null && features.isTagsSupported()) {
+                    List<String> normalized = Tags.normalize(parseTags(tags));
+                    if (!normalized.isEmpty()) clean.put("tags", new JSONArray(normalized));
+                }
                 cleaned.add(clean);
             }
         } catch (JSONException e) {
@@ -170,13 +176,14 @@ public class NoteRepository {
     }
 
     // ---------------------------- CREATE ----------------------------
-    public void addNote(String title, String content, boolean pinned, Callback<Note> cb) {
+    public void addNote(String title, String content, boolean pinned, List<String> tags, Callback<Note> cb) {
         JSONObject obj = new JSONObject();
         try {
             obj.put("title", title);
             obj.put("content", content);
             // Only sent when set, so creating an ordinary note works on a server without the pinned column.
             if (pinned) obj.put("pinned", true);
+            if (!tags.isEmpty()) obj.put("tags", new JSONArray(tags));
         } catch (JSONException e) { cb.onError(e); return; }
 
         Request req = base(rest() + TABLE)
@@ -188,13 +195,15 @@ public class NoteRepository {
     }
 
     // ---------------------------- UPDATE ----------------------------
-    /** @param pinned the new pinned state, or null to leave it as it is (also keeps old servers working) */
-    public void updateNote(long id, String title, String content, Boolean pinned, Callback<Note> cb) {
+    /** @param pinned the new pinned state, or null to leave it as it is (also keeps old servers working)
+     *  @param tags the new tags, or null to leave them as they are */
+    public void updateNote(long id, String title, String content, Boolean pinned, List<String> tags, Callback<Note> cb) {
         JSONObject obj = new JSONObject();
         try {
             obj.put("title", title);
             obj.put("content", content);
             if (pinned != null) obj.put("pinned", pinned.booleanValue());
+            if (tags != null) obj.put("tags", new JSONArray(tags));
         } catch (JSONException e) { cb.onError(e); return; }
         patch(id, obj, cb);
     }
@@ -291,11 +300,12 @@ public class NoteRepository {
         if (arr.length() > 0) {
             // select=* returns every column, so a missing key means the user has not upgraded their schema.
             JSONObject first = arr.getJSONObject(0);
-            features.update(first.has("pinned"), first.has("deleted_at"));
+            features.update(first.has("pinned"), first.has("deleted_at"), first.has("tags"));
         }
         for (int i = 0; i < arr.length(); i++) {
             JSONObject o = arr.getJSONObject(i);
             Note n = new Note();
+            n.setTags(parseTags(o.optJSONArray("tags")));
             n.setPinned(!o.isNull("pinned") && o.optBoolean("pinned", false));
             n.setDeletedAt(o.isNull("deleted_at") ? null : o.optString("deleted_at", null));
             n.setId(o.optLong("id"));
@@ -307,6 +317,17 @@ public class NoteRepository {
             list.add(n);
         }
         return list;
+    }
+
+    /** Text entries only; anything else in the array (or a missing array) is ignored. */
+    private static List<String> parseTags(JSONArray arr) {
+        List<String> tags = new ArrayList<>();
+        if (arr == null) return tags;
+        for (int i = 0; i < arr.length(); i++) {
+            Object v = arr.opt(i);
+            if (v instanceof String) tags.add((String) v);
+        }
+        return tags;
     }
 
     private <T> void fail(Callback<T> cb, Exception e) {

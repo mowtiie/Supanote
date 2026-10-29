@@ -4,8 +4,11 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.ArrayAdapter;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
@@ -15,16 +18,22 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.lifecycle.ViewModelProvider;
 
+import com.google.android.material.chip.Chip;
 import com.google.android.material.color.MaterialColors;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.mowtiie.supanote.R;
 import com.mowtiie.supanote.SupanoteApp;
 import com.mowtiie.supanote.data.model.Note;
+import com.mowtiie.supanote.data.model.Tags;
 import com.mowtiie.supanote.data.repository.NoteRepository;
 import com.mowtiie.supanote.databinding.ActivityManageNoteBinding;
+import com.mowtiie.supanote.ui.ImeActions;
 import com.mowtiie.supanote.ui.SupanoteActivity;
 
 import org.jspecify.annotations.NonNull;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class ManageNoteActivity extends SupanoteActivity {
 
@@ -37,6 +46,12 @@ public class ManageNoteActivity extends SupanoteActivity {
     private long noteId = -1L;
     private String originalTitle = "";
     private String originalContent = "";
+
+    private static final String STATE_TAGS = "state_tags";
+
+    private final List<String> tags = new ArrayList<>();
+    private List<String> originalTags = new ArrayList<>();
+    private boolean tagsRestored = false;
 
     private boolean pinned = false;
     private boolean originalPinned = false;
@@ -68,6 +83,12 @@ public class ManageNoteActivity extends SupanoteActivity {
                 noteViewModel.clearError();
             }
         });
+
+        if (savedInstanceState != null && savedInstanceState.containsKey(STATE_TAGS)) {
+            tags.addAll(savedInstanceState.getStringArrayList(STATE_TAGS));
+            tagsRestored = true;
+        }
+        setUpTags();
 
         Intent intent = getIntent();
         if (intent != null && intent.hasExtra(EXTRA_NOTE_ID)) {
@@ -107,6 +128,13 @@ public class ManageNoteActivity extends SupanoteActivity {
         originalTitle = note.getTitle() == null ? "" : note.getTitle();
         originalContent = note.getContent() == null ? "" : note.getContent();
         pinned = originalPinned = note.isPinned();
+        originalTags = new ArrayList<>(note.getTags());
+        if (!tagsRestored) {
+            tags.clear();
+            tags.addAll(note.getTags());
+        }
+        binding.noteTagsSection.setVisibility(noteViewModel.isTagsSupported() ? View.VISIBLE : View.GONE);
+        renderTags();
         invalidateOptionsMenu();
 
         // Do not overwrite text the user (or a state restore) already put in the fields.
@@ -114,6 +142,82 @@ public class ManageNoteActivity extends SupanoteActivity {
             binding.noteInputTitle.setText(originalTitle);
             binding.noteInputContent.setText(originalContent);
         }
+    }
+
+    private void setUpTags() {
+        binding.noteTagsSection.setVisibility(noteViewModel.isTagsSupported() ? View.VISIBLE : View.GONE);
+        binding.noteInputTag.setAdapter(new ArrayAdapter<>(this, android.R.layout.simple_dropdown_item_1line,
+                ((SupanoteApp) getApplication()).getKnownTags()));
+        binding.noteInputTag.setOnItemClickListener((parent, view, position, id) -> commitTag());
+        binding.noteInputTag.setOnEditorActionListener((v, actionId, event) -> {
+            if (ImeActions.isSubmit(actionId, event)) {
+                commitTag();
+                return true;
+            }
+            return false;
+        });
+        // A hardware Enter key arrives as a key event that the dropdown field does not turn into an editor action.
+        binding.noteInputTag.setOnKeyListener((v, keyCode, event) -> {
+            if (keyCode == KeyEvent.KEYCODE_ENTER && event.getAction() == KeyEvent.ACTION_DOWN) {
+                commitTag();
+                return true;
+            }
+            return false;
+        });
+        binding.noteInputTag.addTextChangedListener(new TextWatcher() {
+            @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
+            @Override public void onTextChanged(CharSequence s, int start, int before, int count) { }
+            @Override public void afterTextChanged(Editable s) {
+                binding.noteTagLayout.setError(null);
+                if (s.toString().contains(",")) commitTag();
+            }
+        });
+        renderTags();
+    }
+
+    /** Turns the text in the tag field into tags; a comma ends one tag, so several can be pasted at once. */
+    private void commitTag() {
+        String typed = binding.noteInputTag.getText() == null ? "" : binding.noteInputTag.getText().toString();
+        boolean full = false;
+        for (String part : typed.split(",")) {
+            String tag = Tags.clean(part);
+            if (tag.isEmpty() || Tags.contains(tags, tag)) continue;
+            if (!Tags.add(tags, tag)) full = true;
+        }
+        binding.noteInputTag.setText("");
+        binding.noteInputTag.dismissDropDown();
+        renderTags();
+        if (full) binding.noteTagLayout.setError(getResources().getQuantityString(R.plurals.error_tags_limit, Tags.MAX_TAGS_PER_NOTE, Tags.MAX_TAGS_PER_NOTE));
+    }
+
+    private void renderTags() {
+        binding.noteTagsGroup.removeAllViews();
+        for (String tag : tags) {
+            Chip chip = (Chip) getLayoutInflater().inflate(R.layout.item_tag_chip, binding.noteTagsGroup, false);
+            chip.setText(tag);
+            chip.setCloseIconContentDescription(getString(R.string.content_description_remove_tag, tag));
+            chip.setOnCloseIconClickListener(v -> {
+                tags.remove(tag);
+                binding.noteTagLayout.setError(null);
+                renderTags();
+            });
+            binding.noteTagsGroup.addView(chip);
+        }
+    }
+
+    /** The tags to save: the chips plus anything typed in the field but not yet added. */
+    private List<String> currentTags() {
+        List<String> result = new ArrayList<>(tags);
+        if (binding.noteInputTag.getText() != null) {
+            for (String part : binding.noteInputTag.getText().toString().split(",")) Tags.add(result, part);
+        }
+        return result;
+    }
+
+    @Override
+    protected void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putStringArrayList(STATE_TAGS, new ArrayList<>(tags));
     }
 
     private boolean isBlank(android.widget.TextView view) {
@@ -211,9 +315,10 @@ public class ManageNoteActivity extends SupanoteActivity {
         };
 
         if (noteId == -1L) {
-            noteViewModel.addNoteAndAwait(title, content, pinned, onDone);
+            noteViewModel.addNoteAndAwait(title, content, pinned, currentTags(), onDone);
         } else {
-            noteViewModel.updateNoteAndAwait(noteId, title, content, pinned != originalPinned ? pinned : null, onDone);
+            noteViewModel.updateNoteAndAwait(noteId, title, content, pinned != originalPinned ? pinned : null,
+                    Tags.sameTags(currentTags(), originalTags) ? null : currentTags(), onDone);
         }
     }
 
@@ -258,7 +363,8 @@ public class ManageNoteActivity extends SupanoteActivity {
     private boolean hasUnsavedChanges() {
         String title = binding.noteInputTitle.getText() == null ? "" : binding.noteInputTitle.getText().toString().trim();
         String content = binding.noteInputContent.getText() == null ? "" : binding.noteInputContent.getText().toString().trim();
-        return !title.equals(originalTitle) || !content.equals(originalContent) || pinned != originalPinned;
+        return !title.equals(originalTitle) || !content.equals(originalContent) || pinned != originalPinned
+                || !Tags.sameTags(currentTags(), originalTags);
     }
 
     @Override

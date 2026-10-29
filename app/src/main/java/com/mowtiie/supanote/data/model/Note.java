@@ -1,5 +1,8 @@
 package com.mowtiie.supanote.data.model;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class Note {
 
     private long id;
@@ -9,6 +12,7 @@ public class Note {
     private String updatedAt;
     private boolean pinned;
     private String deletedAt;
+    private List<String> tags = new ArrayList<>();
 
     public Note() {
         // Default constructor
@@ -56,6 +60,15 @@ public class Note {
 
     public void setUpdatedAt(String updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    /** Never null. Servers without the tags column always give an empty list. */
+    public List<String> getTags() {
+        return tags;
+    }
+
+    public void setTags(List<String> tags) {
+        this.tags = tags == null ? new ArrayList<>() : tags;
     }
 
     public boolean isPinned() {

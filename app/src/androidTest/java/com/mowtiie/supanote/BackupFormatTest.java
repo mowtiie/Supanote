@@ -137,4 +137,33 @@ public class BackupFormatTest {
         assertEquals("Note 499", imported.get(499).getString("title"));
         assertEquals(body.toString(), imported.get(499).getString("content"));
     }
+
+    @Test
+    public void tagsSurviveARoundTrip() throws Exception {
+        Note tagged = new Note(1, "Tagged", "c", "2026-01-01T00:00:00Z");
+        tagged.setTags(Arrays.asList("work", "Home Office"));
+        Note plain = new Note(2, "Plain", "c", "2026-01-01T00:00:00Z");
+
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        BackupFormat.write(out, Arrays.asList(tagged, plain));
+        List<JSONObject> imported = BackupFormat.read(new ByteArrayInputStream(out.toByteArray()));
+
+        assertEquals("work", imported.get(0).getJSONArray("tags").getString(0));
+        assertEquals("Home Office", imported.get(0).getJSONArray("tags").getString(1));
+        assertFalse(imported.get(1).has("tags"));
+    }
+
+    @Test
+    public void backupsWithoutOrWithBadTagsStillImport() throws Exception {
+        List<JSONObject> notes = read("{\"version\":1,\"notes\":["
+                + "{\"title\":\"old\",\"content\":\"c\"},"
+                + "{\"title\":\"odd\",\"tags\":[\"ok\",5,null,\" OK \",\"\"]},"
+                + "{\"title\":\"wrong\",\"tags\":\"x\"}]}");
+
+        assertEquals(3, notes.size());
+        assertFalse(notes.get(0).has("tags"));
+        assertEquals(1, notes.get(1).getJSONArray("tags").length());
+        assertEquals("ok", notes.get(1).getJSONArray("tags").getString(0));
+        assertFalse(notes.get(2).has("tags"));
+    }
 }

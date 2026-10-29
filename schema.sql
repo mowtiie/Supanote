@@ -28,11 +28,13 @@ update notes set updated_at = created_at where updated_at is null;
 alter table notes alter column updated_at set default now();
 alter table notes alter column updated_at set not null;
 
--- 1c. Pinned notes and trash.
+-- 1c. Pinned notes, trash and tags.
 --     Pinned notes are listed first. A note with deleted_at set is in the
 --     trash until it is restored or deleted for good.
+--     tags is a list of short labels used to filter the notes list.
 alter table notes add column if not exists pinned boolean not null default false;
 alter table notes add column if not exists deleted_at timestamptz;
+alter table notes add column if not exists tags text[] not null default '{}';
 
 -- 2. Keep updated_at current whenever the text of a note changes.
 --    Pinning, trashing and restoring leave it alone, so they do not make

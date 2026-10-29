@@ -9,6 +9,9 @@ import com.mowtiie.supanote.data.model.Note;
 import com.mowtiie.supanote.data.remote.ServerFeatures;
 import com.mowtiie.supanote.data.remote.TokenAuthenticator;
 
+import java.util.Collections;
+import java.util.List;
+
 import okhttp3.OkHttpClient;
 
 public class SupanoteApp extends Application {
@@ -21,6 +24,9 @@ public class SupanoteApp extends Application {
 
     /** The note most recently opened from the list, so the editor does not need it in intent extras. */
     private volatile Note openedNote;
+
+    /** Tags in use, most used first, so the editor can suggest them without loading the notes again. */
+    private volatile List<String> knownTags = Collections.emptyList();
 
     @Override
     public void onCreate() {
@@ -62,6 +68,14 @@ public class SupanoteApp extends Application {
 
     public ServerFeatures features() {
         return features;
+    }
+
+    public List<String> getKnownTags() {
+        return knownTags;
+    }
+
+    public void setKnownTags(List<String> tags) {
+        knownTags = tags;
     }
 
     public void setOpenedNote(Note note) {

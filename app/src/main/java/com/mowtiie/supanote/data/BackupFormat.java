@@ -5,7 +5,10 @@ import android.util.JsonToken;
 import android.util.JsonWriter;
 
 import com.mowtiie.supanote.data.model.Note;
+import com.mowtiie.supanote.data.model.Tags;
 
+import org.json.JSONArray;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -21,7 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * The JSON backup file: {@code {"version":1,"exportedAt":<epoch ms>,"notes":[{"title","content","createdAt"}]}}.
+ * The JSON backup file: {@code {"version":1,"exportedAt":<epoch ms>,"notes":[{"title","content","createdAt","tags"?}]}}.
  * Both directions stream, so a large backup never has to exist as one string in memory.
  */
 public final class BackupFormat {
@@ -34,6 +37,7 @@ public final class BackupFormat {
     private static final String KEY_TITLE = "title";
     private static final String KEY_CONTENT = "content";
     private static final String KEY_CREATED_AT = "createdAt";
+    private static final String KEY_TAGS = "tags";
 
     private BackupFormat() {
     }
@@ -52,6 +56,11 @@ public final class BackupFormat {
             writer.name(KEY_CONTENT).value(note.getContent() == null ? "" : note.getContent());
             if (note.getCreatedAt() != null) {
                 writer.name(KEY_CREATED_AT).value(note.getCreatedAt());
+            }
+            if (!note.getTags().isEmpty()) {
+                writer.name(KEY_TAGS).beginArray();
+                for (String tag : note.getTags()) writer.value(tag);
+                writer.endArray();
             }
             writer.endObject();
         }
@@ -99,6 +108,7 @@ public final class BackupFormat {
     private static JSONObject readNote(JsonReader reader) throws IOException, JSONException {
         String title = null;
         String content = null;
+        List<String> tags = new ArrayList<>();
 
         reader.beginObject();
         while (reader.hasNext()) {
@@ -107,6 +117,8 @@ public final class BackupFormat {
                 title = reader.nextString();
             } else if (KEY_CONTENT.equals(name) && reader.peek() == JsonToken.STRING) {
                 content = reader.nextString();
+            } else if (KEY_TAGS.equals(name) && reader.peek() == JsonToken.BEGIN_ARRAY) {
+                tags = readTags(reader);
             } else {
                 reader.skipValue();
             }
@@ -114,8 +126,22 @@ public final class BackupFormat {
         reader.endObject();
 
         if (title == null || title.trim().isEmpty()) return null;
-        return new JSONObject()
+        JSONObject note = new JSONObject()
                 .put(KEY_TITLE, title)
                 .put(KEY_CONTENT, content == null ? "" : content);
+        if (!tags.isEmpty()) note.put(KEY_TAGS, new JSONArray(tags));
+        return note;
+    }
+
+    /** Reads an array of tags, keeping only the text entries. Older backups have no tags at all. */
+    private static List<String> readTags(JsonReader reader) throws IOException {
+        List<String> tags = new ArrayList<>();
+        reader.beginArray();
+        while (reader.hasNext()) {
+            if (reader.peek() == JsonToken.STRING) tags.add(reader.nextString());
+            else reader.skipValue();
+        }
+        reader.endArray();
+        return Tags.normalize(tags);
     }
 }

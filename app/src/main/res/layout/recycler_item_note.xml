@@ -57,6 +57,18 @@
             android:ellipsize="end" />
 
         <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/noteTags"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:fontFamily="sans-serif"
+            android:textColor="?attr/colorPrimary"
+            android:textAppearance="?attr/textAppearanceLabelMedium"
+            android:maxLines="1"
+            android:ellipsize="end"
+            android:visibility="gone" />
+
+        <com.google.android.material.textview.MaterialTextView
             android:id="@+id/noteDate"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

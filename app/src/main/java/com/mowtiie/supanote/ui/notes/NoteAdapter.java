@@ -50,7 +50,7 @@ public class NoteAdapter extends ListAdapter<Note, NoteAdapter.NoteViewHolder> {
         @Override public boolean areContentsTheSame(@NonNull Note a, @NonNull Note b) {
             return eq(a.getTitle(), b.getTitle()) && eq(a.getContent(), b.getContent())
                     && eq(a.getCreatedAt(), b.getCreatedAt()) && eq(a.getUpdatedAt(), b.getUpdatedAt())
-                    && a.isPinned() == b.isPinned() && eq(a.getDeletedAt(), b.getDeletedAt());
+                    && a.isPinned() == b.isPinned() && a.getTags().equals(b.getTags()) && eq(a.getDeletedAt(), b.getDeletedAt());
         }
         private boolean eq(String x, String y) { return Objects.equals(x, y); }
     };
@@ -67,7 +67,7 @@ public class NoteAdapter extends ListAdapter<Note, NoteAdapter.NoteViewHolder> {
     }
 
     class NoteViewHolder extends RecyclerView.ViewHolder {
-        final TextView title, content, date;
+        final TextView title, content, date, tags;
         final View pin;
 
         NoteViewHolder(@NonNull View itemView) {
@@ -75,7 +75,17 @@ public class NoteAdapter extends ListAdapter<Note, NoteAdapter.NoteViewHolder> {
             title = itemView.findViewById(R.id.noteTitle);
             content = itemView.findViewById(R.id.noteContent);
             date = itemView.findViewById(R.id.noteDate);
+            tags = itemView.findViewById(R.id.noteTags);
             pin = itemView.findViewById(R.id.notePin);
+        }
+
+        void bindTags(Note note) {
+            if (note.getTags().isEmpty()) {
+                tags.setVisibility(View.GONE);
+            } else {
+                tags.setText(tagsLine(note, itemView.getContext()));
+                tags.setVisibility(View.VISIBLE);
+            }
         }
 
         void bind(Note note) {
@@ -87,6 +97,7 @@ public class NoteAdapter extends ListAdapter<Note, NoteAdapter.NoteViewHolder> {
             } else {
                 date.setText(formatDate(note.getCreatedAt()));
             }
+            bindTags(note);
             pin.setVisibility(note.isPinned() ? View.VISIBLE : View.GONE);
             itemView.setOnClickListener(v -> actions.onOpen(note));
             itemView.setOnLongClickListener(v -> {
@@ -102,6 +113,20 @@ public class NoteAdapter extends ListAdapter<Note, NoteAdapter.NoteViewHolder> {
                         return true;
                     });
         }
+    }
+
+    private static final int MAX_TAGS_ON_CARD = 3;
+
+    private String tagsLine(Note note, android.content.Context context) {
+        StringBuilder line = new StringBuilder();
+        int shown = Math.min(MAX_TAGS_ON_CARD, note.getTags().size());
+        for (int i = 0; i < shown; i++) {
+            if (i > 0) line.append("  ");
+            line.append('#').append(note.getTags().get(i));
+        }
+        int hidden = note.getTags().size() - shown;
+        if (hidden > 0) line.append("  ").append(context.getString(R.string.label_more_tags, hidden));
+        return line.toString();
     }
 
     private String formatDate(String iso) {

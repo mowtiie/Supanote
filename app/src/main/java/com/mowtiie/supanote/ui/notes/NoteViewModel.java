@@ -93,8 +93,8 @@ public class NoteViewModel extends AndroidViewModel {
         repo.getNote(id, cb);
     }
 
-    public void addNoteAndAwait(String title, String content, boolean pinned, CompletionCallback cb) {
-        repo.addNote(title, content, pinned, new NoteRepository.Callback<Note>() {
+    public void addNoteAndAwait(String title, String content, boolean pinned, List<String> tags, CompletionCallback cb) {
+        repo.addNote(title, content, pinned, tags, new NoteRepository.Callback<Note>() {
             @Override public void onSuccess(Note note) {
                 if (note != null) {
                     List<Note> c = currentList();
@@ -110,8 +110,8 @@ public class NoteViewModel extends AndroidViewModel {
         });
     }
 
-    public void updateNoteAndAwait(long id, String title, String content, Boolean pinned, CompletionCallback cb) {
-        repo.updateNote(id, title, content, pinned, new NoteRepository.Callback<Note>() {
+    public void updateNoteAndAwait(long id, String title, String content, Boolean pinned, List<String> tags, CompletionCallback cb) {
+        repo.updateNote(id, title, content, pinned, tags, new NoteRepository.Callback<Note>() {
             @Override public void onSuccess(Note updated) {
                 if (updated != null) {
                     List<Note> c = currentList();
@@ -131,6 +131,7 @@ public class NoteViewModel extends AndroidViewModel {
 
     public boolean isPinSupported() { return features.isPinSupported(); }
     public boolean isTrashSupported() { return features.isTrashSupported(); }
+    public boolean isTagsSupported() { return features.isTagsSupported(); }
 
     /** Replaces the cached copy of a note with the server's version of it. */
     private void replaceInList(Note updated) {

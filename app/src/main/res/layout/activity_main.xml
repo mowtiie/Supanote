@@ -17,6 +17,22 @@
             app:titleTextColor="?attr/colorOnSurface"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"/>
+
+        <HorizontalScrollView
+            android:id="@+id/tagFilterScroll"
+            android:contentDescription="@string/label_tags_filter"
+            android:scrollbars="none"
+            android:visibility="gone"
+            android:paddingHorizontal="12dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <com.google.android.material.chip.ChipGroup
+                android:id="@+id/tagFilterGroup"
+                app:singleLine="true"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+        </HorizontalScrollView>
     </com.google.android.material.appbar.AppBarLayout>
 
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout

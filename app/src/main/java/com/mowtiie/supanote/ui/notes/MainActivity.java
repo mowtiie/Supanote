@@ -22,6 +22,7 @@ import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.material.chip.Chip;
 import com.google.android.material.color.MaterialColors;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.snackbar.Snackbar;
@@ -29,6 +30,7 @@ import com.mowtiie.supanote.R;
 import com.mowtiie.supanote.SupanoteApp;
 import com.mowtiie.supanote.data.local.CrashReporter;
 import com.mowtiie.supanote.data.model.Note;
+import com.mowtiie.supanote.data.model.Tags;
 import com.mowtiie.supanote.databinding.ActivityMainBinding;
 import com.mowtiie.supanote.ui.SupanoteActivity;
 import com.mowtiie.supanote.ui.auth.AuthViewModel;
@@ -40,14 +42,18 @@ import com.mowtiie.supanote.ui.setup.SetupActivity;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 
 public class MainActivity extends SupanoteActivity implements NoteAdapter.OnNoteAction {
 
     private static final int UNDO_DURATION_MS = 6000;
     private static final String STATE_SEARCH_QUERY = "state_search_query";
+    private static final String STATE_TAG_FILTER = "state_tag_filter";
 
     private enum Sort { NEWEST, OLDEST, TITLE_AZ, TITLE_ZA }
     private enum ListState { LOADING, LOADED_EMPTY, LOADED_WITH_NOTES, ERROR }
@@ -60,6 +66,8 @@ public class MainActivity extends SupanoteActivity implements NoteAdapter.OnNote
     private List<Note> allNotes = new ArrayList<>();
     private final Map<Long, String> searchIndex = new HashMap<>();
     private String searchQuery = "";
+    /** Lower-cased keys of the tags selected in the filter bar; a note matches if it has any of them. */
+    private final Set<String> selectedTagKeys = new LinkedHashSet<>();
     private Sort sortMode = Sort.NEWEST;
 
     private boolean isLoading = false;
@@ -106,6 +114,8 @@ public class MainActivity extends SupanoteActivity implements NoteAdapter.OnNote
         firstLoadDone = savedInstanceState != null;
         if (savedInstanceState != null) {
             searchQuery = savedInstanceState.getString(STATE_SEARCH_QUERY, "");
+            List<String> savedTags = savedInstanceState.getStringArrayList(STATE_TAG_FILTER);
+            if (savedTags != null) selectedTagKeys.addAll(savedTags);
         }
         try {
             sortMode = Sort.valueOf(preferenceUtil.getSortMode());
@@ -135,6 +145,7 @@ public class MainActivity extends SupanoteActivity implements NoteAdapter.OnNote
                 for (Note n : notes) if (!n.isTrashed()) allNotes.add(n);
             }
             rebuildSearchIndex();
+            rebuildTagBar();
             if (allNotes.isEmpty()) {
                 if (state != ListState.ERROR) state = ListState.LOADED_EMPTY;
             } else {
@@ -208,6 +219,12 @@ public class MainActivity extends SupanoteActivity implements NoteAdapter.OnNote
             result = filtered;
         }
 
+        if (!selectedTagKeys.isEmpty()) {
+            List<Note> tagged = new ArrayList<>();
+            for (Note n : result) if (Tags.matchesAny(n, selectedTagKeys)) tagged.add(n);
+            result = tagged;
+        }
+
         switch (sortMode) {
             case OLDEST:
                 Collections.reverse(result);
@@ -237,13 +254,42 @@ public class MainActivity extends SupanoteActivity implements NoteAdapter.OnNote
         updateEmptyState(result.isEmpty());
     }
 
+    /**
+     * Shows the tags in use as filter chips, and shares them with the editor for suggestions. Hidden when no note
+     * has a tag. A selected tag that no note uses any more is dropped from the selection.
+     */
+    private void rebuildTagBar() {
+        Map<String, Integer> usage = Tags.usage(allNotes);
+        ((SupanoteApp) getApplication()).setKnownTags(new ArrayList<>(usage.keySet()));
+
+        Set<String> inUse = new HashSet<>();
+        for (String tag : usage.keySet()) inUse.add(Tags.key(tag));
+        selectedTagKeys.retainAll(inUse);
+
+        binding.tagFilterGroup.removeAllViews();
+        binding.tagFilterScroll.setVisibility(usage.isEmpty() ? View.GONE : View.VISIBLE);
+        for (Map.Entry<String, Integer> entry : usage.entrySet()) {
+            String tag = entry.getKey();
+            String key = Tags.key(tag);
+            Chip chip = (Chip) getLayoutInflater().inflate(R.layout.item_filter_chip, binding.tagFilterGroup, false);
+            chip.setText(getString(R.string.label_tag_with_count, tag, entry.getValue()));
+            chip.setChecked(selectedTagKeys.contains(key));
+            chip.setOnCheckedChangeListener((button, checked) -> {
+                if (checked) selectedTagKeys.add(key);
+                else selectedTagKeys.remove(key);
+                applyView();
+            });
+            binding.tagFilterGroup.addView(chip);
+        }
+    }
+
     /** Lower-cased title and content per note, built once per list change instead of on every keystroke. */
     private void rebuildSearchIndex() {
         searchIndex.clear();
         for (Note n : allNotes) {
             String title = n.getTitle() == null ? "" : n.getTitle();
             String content = n.getContent() == null ? "" : n.getContent();
-            searchIndex.put(n.getId(), (title + "\n" + content).toLowerCase(Locale.getDefault()));
+            searchIndex.put(n.getId(), (title + "\n" + content + "\n" + String.join(" ", n.getTags())).toLowerCase(Locale.getDefault()));
         }
     }
 
@@ -257,9 +303,11 @@ public class MainActivity extends SupanoteActivity implements NoteAdapter.OnNote
             return;
         }
 
-        if (!searchQuery.isEmpty() && filteredResultEmpty && !allNotes.isEmpty()) {
+        if ((!searchQuery.isEmpty() || !selectedTagKeys.isEmpty()) && filteredResultEmpty && !allNotes.isEmpty()) {
             binding.emptyStateContainer.setVisibility(View.VISIBLE);
-            binding.emptyStateLabel.setText(String.format(getString(R.string.label_list_empty_search), searchQuery));
+            binding.emptyStateLabel.setText(searchQuery.isEmpty()
+                    ? getString(R.string.label_list_empty_tags)
+                    : String.format(getString(R.string.label_list_empty_search), searchQuery));
             return;
         }
 
@@ -286,6 +334,7 @@ public class MainActivity extends SupanoteActivity implements NoteAdapter.OnNote
     protected void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putString(STATE_SEARCH_QUERY, searchQuery);
+        outState.putStringArrayList(STATE_TAG_FILTER, new ArrayList<>(selectedTagKeys));
     }
 
     private void deleteWithUndo(Note note) {

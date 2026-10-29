@@ -17,6 +17,7 @@ Supanote is a simple, open-source notes app that connects to your own Supabase b
 * **Bring your own backend:** Connect to any Supabase project, Cloud or self-hosted, with your project URL and publishable key. Switch servers anytime from Settings.
 * **Private per account:** Each account only sees its own notes, enforced by Row Level Security in your database.
 * **Search and sort:** Filter by title or content, and sort by newest, oldest, or title.
+* **Tags:** Label notes and filter the list by one or more tags.
 * **Pin and trash:** Pin notes to keep them at the top. Deleted notes go to the trash first, where you can restore them or delete them for good.
 * **Backup:** Export your notes to a JSON file and import them back.
 * **Themes and privacy:** Light, dark, and dynamic colors, plus an optional screen privacy mode that blocks screenshots.
@@ -37,7 +38,7 @@ Supanote is a simple, open-source notes app that connects to your own Supabase b
 You need Android 10 (API 29) or later, and a Supabase project that is reachable over **HTTPS**: either a free [Supabase Cloud](https://supabase.com) project or your own self-hosted instance.
 
 1. Create a project at [supabase.com](https://supabase.com) (or run your own).
-2. In the **SQL Editor**, run [`schema.sql`](schema.sql) to create the `notes` table, its Row Level Security policies, and the edit-time trigger. The script is safe to run again, so re-run it after updating Supanote to pick up database changes.
+2. In the **SQL Editor**, run [`schema.sql`](schema.sql) to create the `notes` table, its Row Level Security policies, and the edit-time trigger, and the pin, trash and tag columns. The script is safe to run again, so re-run it after updating Supanote to pick up database changes.
 3. Under **Authentication → Sign In / Providers**, enable **Email**. For the easiest setup, turn off **Confirm email**; otherwise new users must confirm by email first, which needs working email delivery.
 4. Copy your **Project URL** and **publishable key** from the project's **Connect** dialog (or **Settings → API Keys**). Legacy `anon` keys still work but are being deprecated by Supabase, so prefer the publishable key (`sb_publishable_...`).
 5. Open Supanote, enter the URL and key on the setup screen, and create an account.
@@ -51,7 +52,7 @@ To use another server later, go to **Settings → Change server**.
 * No analytics or telemetry. The app only talks to your server, and crash reports are only shared if you choose to send them.
 * Notes are **not end-to-end encrypted**: whoever runs the server can read them. Row Level Security only keeps other users out.
 * Importing a backup always adds new notes, so importing the same file twice creates duplicates, and original creation dates are not kept.
-* Not included: offline mode, folders, tags, and archive.
+* Not included: offline mode, folders, and archive.
 
 ## Verifying a download
 
