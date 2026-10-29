@@ -356,9 +356,22 @@ public class SettingsActivity extends SupanoteActivity {
         }
 
         private void confirmChangeServer() {
+            SupanoteApp app = (SupanoteApp) requireActivity().getApplication();
+            // Changing the server deletes the saved notes, so changes that never reached it would be lost.
+            app.pendingChangeCount(count -> {
+                if (!isAdded()) return;
+                showChangeServerDialog(count);
+            });
+        }
+
+        private void showChangeServerDialog(int unsynced) {
+            String message = getString(R.string.dialog_message_change_server_confirm);
+            if (unsynced > 0) {
+                message += "\n\n" + getResources().getQuantityString(R.plurals.dialog_message_unsynced_changes, unsynced, unsynced);
+            }
             new MaterialAlertDialogBuilder(requireContext())
                     .setTitle(R.string.dialog_title_change_server_confirm)
-                    .setMessage(R.string.dialog_message_change_server_confirm)
+                    .setMessage(message)
                     .setPositiveButton(R.string.button_changer_server_continue, (d, w) -> {
                         SupanoteApp app = (SupanoteApp) requireActivity().getApplication();
                         // Revoke the session on the old server (best effort) before forgetting it.

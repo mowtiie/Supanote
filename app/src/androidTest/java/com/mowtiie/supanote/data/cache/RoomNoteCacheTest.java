@@ -66,7 +66,7 @@ public class RoomNoteCacheTest {
     public void notesComeBackExactlyAsTheyWereSaved() {
         Note trashed = note(7, "Seven");
         trashed.setDeletedAt("2026-03-01T10:00:00+00:00");
-        cache.replaceAll(Arrays.asList(note(2, "Two"), trashed));
+        cache.mergeServerNotes(Arrays.asList(note(2, "Two"), trashed));
 
         List<Note> loaded = cache.load();
         assertEquals(2, loaded.size());
@@ -84,7 +84,7 @@ public class RoomNoteCacheTest {
     @Test
     public void emptyAndMissingValuesSurvive() {
         Note bare = new Note(5, "Bare", null, "2026-01-01T00:00:00+00:00");
-        cache.replaceAll(Collections.singletonList(bare));
+        cache.mergeServerNotes(Collections.singletonList(bare));
 
         Note loaded = cache.load().get(0);
         assertEquals("", loaded.getContent());
@@ -95,24 +95,24 @@ public class RoomNoteCacheTest {
 
     @Test
     public void theServersOrderIsKept() {
-        cache.replaceAll(Arrays.asList(note(9, "a"), note(3, "b"), note(6, "c")));
+        cache.mergeServerNotes(Arrays.asList(note(9, "a"), note(3, "b"), note(6, "c")));
 
         assertEquals(Arrays.asList(9L, 3L, 6L), ids(cache.load()));
     }
 
     @Test
     public void replacingDropsNotesThatAreGone() {
-        cache.replaceAll(Arrays.asList(note(1, "a"), note(2, "b")));
-        cache.replaceAll(Collections.singletonList(note(2, "b")));
+        cache.mergeServerNotes(Arrays.asList(note(1, "a"), note(2, "b")));
+        cache.mergeServerNotes(Collections.singletonList(note(2, "b")));
 
         assertEquals(Collections.singletonList(2L), ids(cache.load()));
     }
 
     @Test
     public void textIsNotStoredAsPlainText() {
-        cache.replaceAll(Collections.singletonList(note(1, "Secret diary")));
+        cache.mergeServerNotes(Collections.singletonList(note(1, "Secret diary")));
 
-        CacheDatabase.CachedNote row = db.dao().all().get(0);
+        CacheDatabase.CachedNote row = db.dao().everything().get(0);
         assertFalse(row.payload.contains("Secret"));
         assertFalse(row.payload.contains("diary"));
         assertFalse(row.payload.contains("work"));
@@ -120,7 +120,7 @@ public class RoomNoteCacheTest {
 
     @Test
     public void upsertKeepsTheNotesPlaceAndAddsNewOnesAtTheTop() {
-        cache.replaceAll(Arrays.asList(note(1, "a"), note(2, "b"), note(3, "c")));
+        cache.mergeServerNotes(Arrays.asList(note(1, "a"), note(2, "b"), note(3, "c")));
 
         Note changed = note(2, "b edited");
         cache.upsert(changed);
@@ -142,7 +142,7 @@ public class RoomNoteCacheTest {
     public void removeAndRemoveTrashedOnlyDeleteWhatTheyShould() {
         Note trashed = note(2, "b");
         trashed.setDeletedAt("2026-03-01T10:00:00+00:00");
-        cache.replaceAll(Arrays.asList(note(1, "a"), trashed, note(3, "c")));
+        cache.mergeServerNotes(Arrays.asList(note(1, "a"), trashed, note(3, "c")));
 
         cache.removeTrashed();
         assertEquals(Arrays.asList(1L, 3L), ids(cache.load()));
@@ -153,7 +153,7 @@ public class RoomNoteCacheTest {
 
     @Test
     public void aDifferentAccountNeverSeesTheOldNotes() {
-        cache.replaceAll(Arrays.asList(note(1, "a"), note(2, "b")));
+        cache.mergeServerNotes(Arrays.asList(note(1, "a"), note(2, "b")));
 
         owner = "owner-b";
         assertTrue(cache.load().isEmpty());
@@ -165,7 +165,7 @@ public class RoomNoteCacheTest {
 
     @Test
     public void theSameAccountSeesItsNotesAfterSigningBackIn() {
-        cache.replaceAll(Collections.singletonList(note(1, "a")));
+        cache.mergeServerNotes(Collections.singletonList(note(1, "a")));
 
         owner = null;
         assertTrue(cache.load().isEmpty());
@@ -176,7 +176,7 @@ public class RoomNoteCacheTest {
     @Test
     public void nothingIsReadOrWrittenWhileSignedOut() {
         owner = null;
-        cache.replaceAll(Collections.singletonList(note(1, "a")));
+        cache.mergeServerNotes(Collections.singletonList(note(1, "a")));
         cache.upsert(note(2, "b"));
         assertTrue(cache.load().isEmpty());
 
@@ -186,17 +186,17 @@ public class RoomNoteCacheTest {
 
     @Test
     public void clearForgetsTheNotesAndTheAccount() {
-        cache.replaceAll(Collections.singletonList(note(1, "a")));
+        cache.mergeServerNotes(Collections.singletonList(note(1, "a")));
         cache.clear();
 
-        assertTrue(db.dao().all().isEmpty());
+        assertTrue(db.dao().everything().isEmpty());
         assertNull(db.dao().meta("owner"));
         assertTrue(cache.load().isEmpty());
     }
 
     @Test
     public void notesThatCannotBeDecryptedAreSkipped() {
-        cache.replaceAll(Arrays.asList(note(1, "a"), note(2, "b")));
+        cache.mergeServerNotes(Arrays.asList(note(1, "a"), note(2, "b")));
 
         // Same rows, but a key that cannot decrypt them (as if the Keystore key had been lost).
         RoomNoteCache withLostKey = new RoomNoteCache(db, new NoteCrypto() {
@@ -209,9 +209,9 @@ public class RoomNoteCacheTest {
 
     @Test
     public void aCiphertextCannotBeMovedToAnotherRow() {
-        cache.replaceAll(Arrays.asList(note(1, "one"), note(2, "two")));
+        cache.mergeServerNotes(Arrays.asList(note(1, "one"), note(2, "two")));
 
-        List<CacheDatabase.CachedNote> rows = db.dao().all();
+        List<CacheDatabase.CachedNote> rows = db.dao().everything();
         CacheDatabase.CachedNote first = rows.get(0);
         CacheDatabase.CachedNote second = rows.get(1);
         first.payload = second.payload;   // row 1 now carries the text that was encrypted for row 2
@@ -223,7 +223,7 @@ public class RoomNoteCacheTest {
 
     @Test
     public void anEncryptionFailureLeavesTheOldCopyInPlace() {
-        cache.replaceAll(Collections.singletonList(note(1, "keep me")));
+        cache.mergeServerNotes(Collections.singletonList(note(1, "keep me")));
 
         RoomNoteCache broken = new RoomNoteCache(db, new NoteCrypto() {
             @Override public String encrypt(String plain, String context) throws GeneralSecurityException {
@@ -231,7 +231,7 @@ public class RoomNoteCacheTest {
             }
             @Override public String decrypt(String stored, String context) { return crypto.decrypt(stored, context); }
         }, () -> owner);
-        broken.replaceAll(Collections.singletonList(note(2, "new")));
+        broken.mergeServerNotes(Collections.singletonList(note(2, "new")));
 
         assertEquals(Collections.singletonList(1L), ids(cache.load()));
     }

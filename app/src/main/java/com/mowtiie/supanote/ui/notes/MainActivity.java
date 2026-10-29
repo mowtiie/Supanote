@@ -1,6 +1,8 @@
 package com.mowtiie.supanote.ui.notes;
 
 import android.content.Intent;
+import android.net.ConnectivityManager;
+import android.net.Network;
 import android.net.Uri;
 import android.os.Bundle;
 import android.view.Menu;
@@ -77,6 +79,7 @@ public class MainActivity extends SupanoteActivity implements NoteAdapter.OnNote
     private boolean firstLoadDone = false;
     private boolean skipNextResumeReload = true;
     private Note pendingDelete;
+    private ConnectivityManager.NetworkCallback networkCallback;
 
     private final ActivityResultLauncher<Intent> saveCrashLauncher =
             registerForActivityResult(new ActivityResultContracts.StartActivityForResult(),
@@ -172,8 +175,8 @@ public class MainActivity extends SupanoteActivity implements NoteAdapter.OnNote
             }
         });
 
-        noteViewModel.getStale().observe(this, stale ->
-                binding.offlineBanner.setVisibility(Boolean.TRUE.equals(stale) ? View.VISIBLE : View.GONE));
+        noteViewModel.getStale().observe(this, stale -> updateOfflineBanner());
+        noteViewModel.getPendingChanges().observe(this, pending -> updateOfflineBanner());
         binding.offlineBanner.setOnClickListener(v -> noteViewModel.loadNotes());
 
         noteViewModel.getError().observe(this, msg -> {
@@ -260,6 +263,17 @@ public class MainActivity extends SupanoteActivity implements NoteAdapter.OnNote
             if (wasAtTop && binding != null) binding.notesRecycler.scrollToPosition(0);
         });
         updateEmptyState(result.isEmpty());
+    }
+
+    /** Offline banner: says the notes are only the saved copy, and how many changes are waiting to upload. */
+    private void updateOfflineBanner() {
+        boolean stale = Boolean.TRUE.equals(noteViewModel.getStale().getValue());
+        Integer pending = noteViewModel.getPendingChanges().getValue();
+        int count = pending == null ? 0 : pending;
+        binding.offlineBanner.setVisibility(stale ? View.VISIBLE : View.GONE);
+        binding.offlineBanner.setText(count > 0
+                ? getResources().getQuantityString(R.plurals.label_offline_banner_pending, count, count)
+                : getString(R.string.label_offline_banner));
     }
 
     private void showSchemaHintOnce() {
@@ -368,6 +382,7 @@ public class MainActivity extends SupanoteActivity implements NoteAdapter.OnNote
                 .setDuration(UNDO_DURATION_MS)
                 .setAction(R.string.button_undo, v -> {
                     pendingDelete = null;
+                    noteViewModel.unhide(note.getId());
                     noteViewModel.loadNotes();
                 })
                 .addCallback(new Snackbar.Callback() {
@@ -389,8 +404,51 @@ public class MainActivity extends SupanoteActivity implements NoteAdapter.OnNote
     }
 
     @Override
+    protected void onStart() {
+        super.onStart();
+        watchNetwork();
+    }
+
+    /**
+     * When a connection comes back while the app is open, refresh at once if the notes shown are only the saved copy
+     * or changes are waiting to upload.
+     */
+    private void watchNetwork() {
+        if (noteViewModel == null || networkCallback != null) return;
+        ConnectivityManager manager = getSystemService(ConnectivityManager.class);
+        if (manager == null) return;
+        networkCallback = new ConnectivityManager.NetworkCallback() {
+            @Override public void onAvailable(@NonNull Network network) {
+                runOnUiThread(() -> {
+                    if (noteViewModel == null || isFinishing()) return;
+                    Integer pending = noteViewModel.getPendingChanges().getValue();
+                    boolean stale = Boolean.TRUE.equals(noteViewModel.getStale().getValue());
+                    if (stale || (pending != null && pending > 0)) noteViewModel.loadNotes();
+                });
+            }
+        };
+        try {
+            manager.registerDefaultNetworkCallback(networkCallback);
+        } catch (RuntimeException e) {
+            networkCallback = null;
+        }
+    }
+
+    private void stopWatchingNetwork() {
+        if (networkCallback == null) return;
+        ConnectivityManager manager = getSystemService(ConnectivityManager.class);
+        try {
+            if (manager != null) manager.unregisterNetworkCallback(networkCallback);
+        } catch (RuntimeException ignored) {
+            // Already gone.
+        }
+        networkCallback = null;
+    }
+
+    @Override
     protected void onStop() {
         super.onStop();
+        stopWatchingNetwork();
         if (noteViewModel != null) commitPendingDelete();
     }
 
@@ -421,6 +479,13 @@ public class MainActivity extends SupanoteActivity implements NoteAdapter.OnNote
     public void onActionsRequested(Note note) {
         List<String> labels = new ArrayList<>();
         List<Runnable> actions = new ArrayList<>();
+
+        if (note.getSyncState() == Note.FAILED) {
+            labels.add(getString(R.string.menu_retry_sync));
+            actions.add(() -> noteViewModel.retrySync(note.getId()));
+            labels.add(getString(R.string.menu_discard_changes));
+            actions.add(() -> noteViewModel.discardLocalChanges(note.getId()));
+        }
 
         if (noteViewModel.isPinSupported()) {
             labels.add(getString(note.isPinned() ? R.string.menu_unpin : R.string.menu_pin));
@@ -536,16 +601,23 @@ public class MainActivity extends SupanoteActivity implements NoteAdapter.OnNote
         }
 
         if (id == R.id.menu_item_signout) {
-            new MaterialAlertDialogBuilder(this)
-                    .setTitle(R.string.dialog_title_sign_out)
-                    .setMessage(R.string.dialog_message_sign_out)
-                    .setPositiveButton(R.string.menu_sign_out, (d, w) -> {
-                        commitPendingDelete();
-                        new ViewModelProvider(this).get(AuthViewModel.class).signOut();
-                        goToLogin();
-                    })
-                    .setNegativeButton(R.string.button_cancel, null)
-                    .show();
+            // Signing out deletes the saved notes, so changes that never reached the server would be lost.
+            ((SupanoteApp) getApplication()).pendingChangeCount(count -> {
+                String message = getString(R.string.dialog_message_sign_out);
+                if (count > 0) {
+                    message += "\n\n" + getResources().getQuantityString(R.plurals.dialog_message_unsynced_changes, count, count);
+                }
+                new MaterialAlertDialogBuilder(this)
+                        .setTitle(R.string.dialog_title_sign_out)
+                        .setMessage(message)
+                        .setPositiveButton(R.string.menu_sign_out, (d, w) -> {
+                            commitPendingDelete();
+                            new ViewModelProvider(this).get(AuthViewModel.class).signOut();
+                            goToLogin();
+                        })
+                        .setNegativeButton(R.string.button_cancel, null)
+                        .show();
+            });
             return true;
         }
 

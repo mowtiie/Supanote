@@ -284,6 +284,43 @@ public class NoteRepository {
         });
     }
 
+    // ---------------------------- sync (offline editing) ----------------------------
+
+    /** Inserts a note exactly as given (the sync engine builds the body, including client_id). */
+    public void createRow(JSONObject body, Callback<Note> cb) {
+        Request req = base(rest() + TABLE)
+                .addHeader("Content-Type", "application/json")
+                .addHeader("Prefer", "return=representation")
+                .post(RequestBody.create(body.toString(), JSON))
+                .build();
+        enqueueSingle(req, cb);
+    }
+
+    /** The note a retried upload already created, found by the id the app made for it; null if none. */
+    public void getByClientId(String clientId, Callback<Note> cb) {
+        HttpUrl url = HttpUrl.parse(rest() + TABLE).newBuilder()
+                .addQueryParameter("select", "*")
+                .addQueryParameter("client_id", "eq." + clientId)
+                .build();
+        enqueueSingle(base(url.toString()).build(), cb);
+    }
+
+    /**
+     * Updates a note, and only if its updated_at still equals {@code ifUpdatedAt} when that is given: the edit is then
+     * known to be based on the server's current text. The result is the updated note, or null when nothing matched
+     * (the note changed, or is gone).
+     */
+    public void updateWhere(long id, JSONObject fields, String ifUpdatedAt, Callback<Note> cb) {
+        HttpUrl.Builder url = HttpUrl.parse(rest() + TABLE).newBuilder().addQueryParameter("id", "eq." + id);
+        if (ifUpdatedAt != null && !ifUpdatedAt.isEmpty()) url.addQueryParameter("updated_at", "eq." + ifUpdatedAt);
+        Request req = base(url.build().toString())
+                .addHeader("Content-Type", "application/json")
+                .addHeader("Prefer", "return=representation")
+                .patch(RequestBody.create(fields.toString(), JSON))
+                .build();
+        enqueueSingle(req, cb);
+    }
+
     /** Permanently deletes every note that is in the trash. */
     public void emptyTrash(Callback<Void> cb) {
         Request req = base(rest() + TABLE + "?deleted_at=not.is.null").delete().build();
@@ -324,6 +361,7 @@ public class NoteRepository {
             // select=* returns every column, so a missing key means the user has not upgraded their schema.
             JSONObject first = arr.getJSONObject(0);
             features.update(first.has("pinned"), first.has("deleted_at"), first.has("tags"), first.has("archived"));
+            features.setOfflineEditingSupported(first.has("client_id"));
         }
         for (int i = 0; i < arr.length(); i++) {
             JSONObject o = arr.getJSONObject(i);

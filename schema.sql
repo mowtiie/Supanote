@@ -33,10 +33,14 @@ alter table notes alter column updated_at set not null;
 --     trash until it is restored or deleted for good.
 --     tags is a list of short labels used to filter the notes list.
 --     archived notes are kept but hidden from the main list.
+--     client_id is made by the app for notes created offline, so a retried
+--     upload cannot create the same note twice.
 alter table notes add column if not exists pinned boolean not null default false;
 alter table notes add column if not exists deleted_at timestamptz;
 alter table notes add column if not exists tags text[] not null default '{}';
 alter table notes add column if not exists archived boolean not null default false;
+alter table notes add column if not exists client_id uuid;
+create unique index if not exists notes_client_id_key on notes (client_id) where client_id is not null;
 
 -- 2. Keep updated_at current whenever the text of a note changes.
 --    Pinning, archiving, trashing and restoring leave it alone, so they do not make

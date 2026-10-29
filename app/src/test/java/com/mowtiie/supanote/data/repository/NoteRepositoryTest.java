@@ -511,4 +511,71 @@ public class NoteRepositoryTest {
 
         cb.awaitError();
     }
+
+    // ---------------------------- sync requests ----------------------------
+
+    @Test
+    public void createRowSendsTheBodyAsGiven() throws Exception {
+        server.enqueue(json("[{\"id\":9,\"title\":\"t\"}]"));
+        Capture<Note> cb = new Capture<>();
+        repo.createRow(new JSONObject().put("title", "t").put("client_id", "abc"), cb);
+
+        assertEquals(9, cb.await().getId());
+        RecordedRequest request = server.takeRequest();
+        assertEquals("POST", request.getMethod());
+        assertEquals("return=representation", request.getHeader("Prefer"));
+        assertEquals("abc", body(request).getString("client_id"));
+    }
+
+    @Test
+    public void getByClientIdFiltersOnTheClientId() throws Exception {
+        server.enqueue(json("[{\"id\":9,\"title\":\"t\"}]"));
+        Capture<Note> cb = new Capture<>();
+        repo.getByClientId("11111111-2222-3333-4444-555555555555", cb);
+        cb.await();
+
+        assertEquals("eq.11111111-2222-3333-4444-555555555555", server.takeRequest().getRequestUrl().queryParameter("client_id"));
+    }
+
+    @Test
+    public void updateWhereAddsTheUpdatedAtConditionOnlyWhenGiven() throws Exception {
+        server.enqueue(json("[{\"id\":5,\"title\":\"t\"}]"));
+        server.enqueue(json("[{\"id\":5,\"title\":\"t\"}]"));
+        Capture<Note> guarded = new Capture<>();
+        repo.updateWhere(5, new JSONObject().put("title", "t"), "2026-01-01T10:00:00.123456+00:00", guarded);
+        guarded.await();
+        Capture<Note> plain = new Capture<>();
+        repo.updateWhere(5, new JSONObject().put("pinned", true), null, plain);
+        plain.await();
+
+        okhttp3.HttpUrl first = server.takeRequest().getRequestUrl();
+        assertEquals("eq.5", first.queryParameter("id"));
+        // The "+" of the offset must survive the round trip, or the server would read a different time.
+        assertEquals("eq.2026-01-01T10:00:00.123456+00:00", first.queryParameter("updated_at"));
+        assertNull(server.takeRequest().getRequestUrl().queryParameter("updated_at"));
+    }
+
+    @Test
+    public void updateWhereGivesNullWhenNothingMatched() throws Exception {
+        server.enqueue(json("[]"));
+        Capture<Note> cb = new Capture<>();
+        repo.updateWhere(5, new JSONObject().put("title", "t"), "x", cb);
+
+        assertNull(cb.await());
+    }
+
+    @Test
+    public void theClientIdColumnTurnsOfflineEditingOnOrOff() throws Exception {
+        server.enqueue(json("[{\"id\":1,\"title\":\"t\",\"client_id\":null}]"));
+        Capture<List<Note>> with = new Capture<>();
+        repo.getNotesPage(0, 200, with);
+        with.await();
+        assertTrue(features.isOfflineEditingSupported());
+
+        server.enqueue(json("[{\"id\":1,\"title\":\"t\"}]"));
+        Capture<List<Note>> without = new Capture<>();
+        repo.getNotesPage(0, 200, without);
+        without.await();
+        assertFalse(features.isOfflineEditingSupported());
+    }
 }

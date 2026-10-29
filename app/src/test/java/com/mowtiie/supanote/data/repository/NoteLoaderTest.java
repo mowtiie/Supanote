@@ -6,7 +6,7 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import com.mowtiie.supanote.data.cache.NoteCache;
+import com.mowtiie.supanote.data.cache.FakeNoteCache;
 import com.mowtiie.supanote.data.local.ConnectionManager;
 import com.mowtiie.supanote.data.local.SessionManager;
 import com.mowtiie.supanote.data.model.Note;
@@ -34,17 +34,21 @@ import okhttp3.mockwebserver.MockWebServer;
 public class NoteLoaderTest {
 
     /** An in-memory cache that records how it was used. */
-    private static final class FakeCache implements NoteCache {
+    private static final class FakeCache extends FakeNoteCache {
         List<Note> saved = new ArrayList<>();
+        /** Reads made before the server list was merged in, i.e. for the saved copy shown first. */
         int loads;
         List<Note> replacedWith;
 
-        @Override public synchronized List<Note> load() { loads++; return new ArrayList<>(saved); }
-        @Override public synchronized void replaceAll(List<Note> notes) { replacedWith = new ArrayList<>(notes); saved = new ArrayList<>(notes); }
-        @Override public void upsert(Note note) { }
-        @Override public void remove(long id) { }
-        @Override public void removeTrashed() { }
-        @Override public void clear() { }
+        @Override public synchronized List<Note> load() {
+            if (replacedWith == null) loads++;
+            return new ArrayList<>(saved);
+        }
+
+        @Override public synchronized void mergeServerNotes(List<Note> notes) {
+            replacedWith = new ArrayList<>(notes);
+            saved = new ArrayList<>(notes);
+        }
     }
 
     /** Collects what the loader reports, and lets a test wait for the end of the load. */
@@ -171,14 +175,20 @@ public class NoteLoaderTest {
     @Test
     public void aSavedCopyThatArrivesLateIsIgnored() throws Exception {
         cache.saved = new ArrayList<>(Collections.singletonList(note(1)));
-        server.enqueue(json(rows(10, 2)));
+        server.enqueue(json(rows(0, 200)));
+        server.enqueue(json(rows(200, 50)));
         QueuedExecutor io = new QueuedExecutor();
         Events events = new Events();
         new NoteLoader(repo, cache, io, Runnable::run).load(true, true, events);
-        events.await();   // the server has answered while the cache read is still waiting
 
-        io.runAll();
-        assertEquals(java.util.Collections.singletonList("done:2"), events.log);
+        // The first page is on screen while the cache read is still waiting in the queue.
+        long deadline = System.currentTimeMillis() + 5000;
+        while (events.log.isEmpty() && System.currentTimeMillis() < deadline) Thread.sleep(20);
+        io.runAll();   // now the saved copy would arrive, and must not replace what the server showed
+        io.runAll();   // and the final merge
+        events.await();
+
+        assertEquals(java.util.Arrays.asList("page:200", "done:250"), events.log);
     }
 
     @Test

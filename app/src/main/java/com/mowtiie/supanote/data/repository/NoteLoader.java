@@ -117,10 +117,18 @@ public class NoteLoader {
 
             if (snapshot != null) {
                 if (last) {
-                    List<Note> toSave = snapshot;
-                    io.execute(() -> cache.replaceAll(toSave));
+                    // Saving first, then showing what the cache holds, so notes with changes still waiting to upload
+                    // (and notes made offline) are in the list rather than replaced by the server's older copy.
+                    List<Note> fromServer = snapshot;
+                    io.execute(() -> {
+                        cache.mergeServerNotes(fromServer);
+                        List<Note> merged = cache.load();
+                        List<Note> shown = merged.isEmpty() && !fromServer.isEmpty() ? fromServer : merged;
+                        main.execute(() -> listener.onNotes(shown, true));
+                    });
+                } else {
+                    listener.onNotes(snapshot, false);
                 }
-                listener.onNotes(snapshot, last);
             }
             if (!last) page(offset + NoteRepository.PAGE_SIZE);
         }

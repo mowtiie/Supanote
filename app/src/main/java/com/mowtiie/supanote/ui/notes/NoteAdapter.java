@@ -50,7 +50,7 @@ public class NoteAdapter extends ListAdapter<Note, NoteAdapter.NoteViewHolder> {
         @Override public boolean areContentsTheSame(@NonNull Note a, @NonNull Note b) {
             return eq(a.getTitle(), b.getTitle()) && eq(a.getContent(), b.getContent())
                     && eq(a.getCreatedAt(), b.getCreatedAt()) && eq(a.getUpdatedAt(), b.getUpdatedAt())
-                    && a.isPinned() == b.isPinned() && a.getTags().equals(b.getTags()) && eq(a.getDeletedAt(), b.getDeletedAt());
+                    && a.isPinned() == b.isPinned() && a.getSyncState() == b.getSyncState() && a.getTags().equals(b.getTags()) && eq(a.getDeletedAt(), b.getDeletedAt());
         }
         private boolean eq(String x, String y) { return Objects.equals(x, y); }
     };
@@ -92,11 +92,16 @@ public class NoteAdapter extends ListAdapter<Note, NoteAdapter.NoteViewHolder> {
             title.setText(note.getTitle());
             content.setText(note.getContent());
             content.setVisibility(note.getContent() == null || note.getContent().isEmpty() ? View.GONE : View.VISIBLE);
-            if (note.isEdited()) {
-                date.setText(itemView.getContext().getString(R.string.label_note_edited, formatDate(note.getUpdatedAt())));
-            } else {
-                date.setText(formatDate(note.getCreatedAt()));
+            String when = note.isEdited()
+                    ? itemView.getContext().getString(R.string.label_note_edited, formatDate(note.getUpdatedAt()))
+                    : formatDate(note.getCreatedAt());
+            // A note with changes the server does not have yet says so, so nobody thinks it is already safe there.
+            if (note.getSyncState() == Note.PENDING) {
+                when += " · " + itemView.getContext().getString(R.string.label_sync_pending);
+            } else if (note.getSyncState() == Note.FAILED) {
+                when += " · " + itemView.getContext().getString(R.string.label_sync_failed);
             }
+            date.setText(when);
             bindTags(note);
             pin.setVisibility(note.isPinned() ? View.VISIBLE : View.GONE);
             itemView.setOnClickListener(v -> actions.onOpen(note));

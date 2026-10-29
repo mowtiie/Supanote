@@ -13,6 +13,8 @@ import com.mowtiie.supanote.data.local.SessionManager;
 import com.mowtiie.supanote.data.model.Note;
 import com.mowtiie.supanote.data.remote.ServerFeatures;
 import com.mowtiie.supanote.data.remote.TokenAuthenticator;
+import com.mowtiie.supanote.data.repository.NoteRepository;
+import com.mowtiie.supanote.data.sync.SyncEngine;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -23,6 +25,7 @@ import java.util.Locale;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.function.IntConsumer;
 
 import okhttp3.OkHttpClient;
 
@@ -36,6 +39,7 @@ public class SupanoteApp extends Application {
     private Executor mainThread;
     private NoteCache cache;
     private ExecutorService cacheExecutor;
+    private SyncEngine syncEngine;
 
     /** The note most recently opened from the list, so the editor does not need it in intent extras. */
     private volatile Note openedNote;
@@ -68,6 +72,11 @@ public class SupanoteApp extends Application {
                 .authenticator(new TokenAuthenticator(connection, session, httpClient))
                 .build();
 
+        // Changes made offline are uploaded by one engine for the whole app, on its own thread because it waits on the network.
+        NoteRepository syncRepo = new NoteRepository(connection, session, authedHttpClient, features, mainThread);
+        syncEngine = new SyncEngine(syncRepo, cache, features, Executors.newSingleThreadExecutor(r -> new Thread(r, "note-sync")),
+                mainThread, title -> title + getString(R.string.suffix_note_conflict));
+
         // Opening the encrypted session storage is slow; do it off the main thread.
         new Thread(session::warmUp, "session-warmup").start();
     }
@@ -94,6 +103,18 @@ public class SupanoteApp extends Application {
 
     public Executor cacheExecutor() {
         return cacheExecutor;
+    }
+
+    public SyncEngine syncEngine() {
+        return syncEngine;
+    }
+
+    /** How many notes have changes that are not on the server yet, delivered on the main thread. */
+    public void pendingChangeCount(IntConsumer callback) {
+        cacheExecutor.execute(() -> {
+            int count = cache.pendingCount();
+            mainThread.execute(() -> callback.accept(count));
+        });
     }
 
     /** Deletes the saved notes (sign out, change server). */

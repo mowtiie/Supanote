@@ -15,6 +15,12 @@ public class Note {
     private String deletedAt;
     private List<String> tags = new ArrayList<>();
 
+    /** Whether the note exists only on this device, or has changes the server does not have yet. */
+    public static final int SYNCED = 0;
+    public static final int PENDING = 1;
+    public static final int FAILED = 2;
+    private int syncState = SYNCED;
+
     public Note() {
         // Default constructor
     }
@@ -70,6 +76,19 @@ public class Note {
 
     public void setTags(List<String> tags) {
         this.tags = tags == null ? new ArrayList<>() : tags;
+    }
+
+    public int getSyncState() {
+        return syncState;
+    }
+
+    public void setSyncState(int syncState) {
+        this.syncState = syncState;
+    }
+
+    /** Notes created offline get a temporary negative id until the server assigns a real one. -1 is reserved for "no note". */
+    public boolean isLocalOnly() {
+        return id <= -2;
     }
 
     public boolean isArchived() {

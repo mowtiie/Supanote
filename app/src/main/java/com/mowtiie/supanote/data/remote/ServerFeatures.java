@@ -11,6 +11,7 @@ public class ServerFeatures {
     private volatile boolean trashSupported = true;
     private volatile boolean tagsSupported = true;
     private volatile boolean archiveSupported = true;
+    private volatile boolean offlineEditingSupported = true;
 
     public boolean isPinSupported() {
         return pinSupported;
@@ -26,6 +27,15 @@ public class ServerFeatures {
 
     public boolean isArchiveSupported() {
         return archiveSupported;
+    }
+
+    /** Whether notes can be created offline: that needs the client_id column to avoid duplicates on retry. */
+    public boolean isOfflineEditingSupported() {
+        return offlineEditingSupported;
+    }
+
+    public void setOfflineEditingSupported(boolean supported) {
+        this.offlineEditingSupported = supported;
     }
 
     public void update(boolean pinSupported, boolean trashSupported, boolean tagsSupported, boolean archiveSupported) {
