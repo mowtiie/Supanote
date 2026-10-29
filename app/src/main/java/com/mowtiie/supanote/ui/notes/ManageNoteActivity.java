@@ -15,6 +15,7 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.lifecycle.ViewModelProvider;
 
+import com.google.android.material.color.MaterialColors;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.mowtiie.supanote.R;
 import com.mowtiie.supanote.SupanoteApp;
@@ -36,6 +37,9 @@ public class ManageNoteActivity extends SupanoteActivity {
     private long noteId = -1L;
     private String originalTitle = "";
     private String originalContent = "";
+
+    private boolean pinned = false;
+    private boolean originalPinned = false;
 
     private boolean saving = false;
 
@@ -102,6 +106,8 @@ public class ManageNoteActivity extends SupanoteActivity {
     private void showNote(Note note) {
         originalTitle = note.getTitle() == null ? "" : note.getTitle();
         originalContent = note.getContent() == null ? "" : note.getContent();
+        pinned = originalPinned = note.isPinned();
+        invalidateOptionsMenu();
 
         // Do not overwrite text the user (or a state restore) already put in the fields.
         if (isBlank(binding.noteInputTitle) && isBlank(binding.noteInputContent)) {
@@ -144,6 +150,11 @@ public class ManageNoteActivity extends SupanoteActivity {
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         int id = item.getItemId();
         if (id == R.id.menu_item_save) { saveNote(); return true; }
+        if (id == R.id.menu_item_pin) {
+            pinned = !pinned;
+            invalidateOptionsMenu();
+            return true;
+        }
         if (id == R.id.menu_item_delete) { confirmDelete(); return true; }
         if (id == android.R.id.home) {
             if (hasUnsavedChanges()) confirmDiscard();
@@ -156,6 +167,16 @@ public class ManageNoteActivity extends SupanoteActivity {
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
         menu.findItem(R.id.menu_item_save).setEnabled(!saving);
+        MenuItem pin = menu.findItem(R.id.menu_item_pin);
+        if (pin != null) {
+            pin.setVisible(noteViewModel.isPinSupported());
+            pin.setTitle(pinned ? R.string.menu_unpin : R.string.menu_pin);
+            if (pin.getIcon() != null) {
+                pin.getIcon().mutate().setTint(pinned
+                        ? MaterialColors.getColor(binding.toolbar, androidx.appcompat.R.attr.colorPrimary)
+                        : MaterialColors.getColor(binding.toolbar, com.google.android.material.R.attr.colorOnSurfaceVariant));
+            }
+        }
         MenuItem del = menu.findItem(R.id.menu_item_delete);
 
         if (del != null) {
@@ -190,9 +211,9 @@ public class ManageNoteActivity extends SupanoteActivity {
         };
 
         if (noteId == -1L) {
-            noteViewModel.addNoteAndAwait(title, content, onDone);
+            noteViewModel.addNoteAndAwait(title, content, pinned, onDone);
         } else {
-            noteViewModel.updateNoteAndAwait(noteId, title, content, onDone);
+            noteViewModel.updateNoteAndAwait(noteId, title, content, pinned != originalPinned ? pinned : null, onDone);
         }
     }
 
@@ -202,16 +223,17 @@ public class ManageNoteActivity extends SupanoteActivity {
     }
 
     private void confirmDelete() {
+        boolean trash = noteViewModel.isTrashSupported();
         new MaterialAlertDialogBuilder(this)
-                .setTitle(R.string.dialog_title_note_delete)
-                .setMessage(R.string.dialog_message_note_delete)
-                .setPositiveButton(R.string.button_delete, (d, w) -> {
+                .setTitle(trash ? R.string.dialog_title_note_trash : R.string.dialog_title_note_delete)
+                .setMessage(trash ? R.string.dialog_message_note_trash : R.string.dialog_message_note_delete)
+                .setPositiveButton(trash ? R.string.button_move_to_trash : R.string.button_delete, (d, w) -> {
                     if (noteId == -1L) {
                         finish();
                         return;
                     }
                     setSaving(true);
-                    noteViewModel.deleteNoteAndAwait(noteId, success -> {
+                    noteViewModel.discardNoteAndAwait(noteId, success -> {
                         setSaving(false);
                         if (success) {
                             finish();
@@ -236,7 +258,7 @@ public class ManageNoteActivity extends SupanoteActivity {
     private boolean hasUnsavedChanges() {
         String title = binding.noteInputTitle.getText() == null ? "" : binding.noteInputTitle.getText().toString().trim();
         String content = binding.noteInputContent.getText() == null ? "" : binding.noteInputContent.getText().toString().trim();
-        return !title.equals(originalTitle) || !content.equals(originalContent);
+        return !title.equals(originalTitle) || !content.equals(originalContent) || pinned != originalPinned;
     }
 
     @Override

@@ -20,6 +20,10 @@
             android:parentActivityName=".ui.notes.MainActivity"
             android:exported="false" />
         <activity
+            android:name=".ui.notes.TrashActivity"
+            android:exported="false"
+            android:parentActivityName=".ui.notes.MainActivity" />
+        <activity
             android:name=".ui.notes.ManageNoteActivity"
             android:exported="false"
             android:parentActivityName=".ui.notes.MainActivity"

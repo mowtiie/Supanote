@@ -197,7 +197,7 @@ public class SettingsActivity extends SupanoteActivity {
         private void exportData() {
             showProgressDialog(R.string.dialog_message_progress_exporting);
             SupanoteApp app = (SupanoteApp) requireActivity().getApplication();
-            NoteRepository repo = new NoteRepository(app.connection(), app.session(), app.authedHttpClient());
+            NoteRepository repo = new NoteRepository(app.connection(), app.session(), app.authedHttpClient(), app.features());
 
             repo.getNotes(new NoteRepository.Callback<List<Note>>() {
                 @Override public void onSuccess(List<Note> notes) {
@@ -331,7 +331,7 @@ public class SettingsActivity extends SupanoteActivity {
         private void uploadImportedNotes(List<JSONObject> notes) {
             showProgressDialog(R.string.dialog_message_progress_importing);
             SupanoteApp app = (SupanoteApp) requireActivity().getApplication();
-            NoteRepository repo = new NoteRepository(app.connection(), app.session(), app.authedHttpClient());
+            NoteRepository repo = new NoteRepository(app.connection(), app.session(), app.authedHttpClient(), app.features());
 
             repo.bulkInsert(notes, new NoteRepository.Callback<Integer>() {
                 @Override public void onSuccess(Integer count) {

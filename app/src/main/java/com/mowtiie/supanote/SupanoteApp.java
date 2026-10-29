@@ -6,6 +6,7 @@ import com.mowtiie.supanote.data.local.ConnectionManager;
 import com.mowtiie.supanote.data.local.CrashHandler;
 import com.mowtiie.supanote.data.local.SessionManager;
 import com.mowtiie.supanote.data.model.Note;
+import com.mowtiie.supanote.data.remote.ServerFeatures;
 import com.mowtiie.supanote.data.remote.TokenAuthenticator;
 
 import okhttp3.OkHttpClient;
@@ -16,6 +17,7 @@ public class SupanoteApp extends Application {
     private ConnectionManager connection;
     private OkHttpClient httpClient;
     private OkHttpClient authedHttpClient;
+    private final ServerFeatures features = new ServerFeatures();
 
     /** The note most recently opened from the list, so the editor does not need it in intent extras. */
     private volatile Note openedNote;
@@ -56,6 +58,10 @@ public class SupanoteApp extends Application {
 
     public OkHttpClient authedHttpClient() {
         return authedHttpClient;
+    }
+
+    public ServerFeatures features() {
+        return features;
     }
 
     public void setOpenedNote(Note note) {

@@ -42,4 +42,16 @@ public class NoteTest {
     public void fourArgumentConstructorHasNoUpdatedAt() {
         assertFalse(new Note(1, "t", "c", "2026-01-01T10:00:00+00:00").isEdited());
     }
+
+    @Test
+    public void trashedOnlyWhenDeletedAtIsSet() {
+        Note n = new Note(1, "t", "c", "2026-01-01T10:00:00+00:00");
+        assertFalse(n.isTrashed());
+        n.setDeletedAt("");
+        assertFalse(n.isTrashed());
+        n.setDeletedAt("2026-01-02T10:00:00+00:00");
+        assertTrue(n.isTrashed());
+        n.setDeletedAt(null);
+        assertFalse(n.isTrashed());
+    }
 }

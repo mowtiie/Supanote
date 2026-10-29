@@ -130,7 +130,10 @@ public class MainActivity extends SupanoteActivity implements NoteAdapter.OnNote
         noteViewModel = new ViewModelProvider(this).get(NoteViewModel.class);
 
         noteViewModel.getNotes().observe(this, notes -> {
-            allNotes = notes != null ? notes : new ArrayList<>();
+            allNotes = new ArrayList<>();
+            if (notes != null) {
+                for (Note n : notes) if (!n.isTrashed()) allNotes.add(n);
+            }
             rebuildSearchIndex();
             if (allNotes.isEmpty()) {
                 if (state != ListState.ERROR) state = ListState.LOADED_EMPTY;
@@ -220,6 +223,9 @@ public class MainActivity extends SupanoteActivity implements NoteAdapter.OnNote
                 break;
         }
 
+        // Pinned notes first, keeping the chosen order inside each group (List.sort is stable).
+        result.sort((a, b) -> Boolean.compare(b.isPinned(), a.isPinned()));
+
         // Notes arriving above the first visible one (e.g. after an import) would otherwise keep the list anchored to
         // an old note far below. If the user was looking at the top, stay at the top.
         RecyclerView.LayoutManager layoutManager = binding.notesRecycler.getLayoutManager();
@@ -288,7 +294,9 @@ public class MainActivity extends SupanoteActivity implements NoteAdapter.OnNote
         noteViewModel.removeFromList(note.getId());
 
         // LENGTH_LONG is only about 3 seconds, which is short for an undo.
-        Snackbar.make(binding.getRoot(), R.string.snackbar_note_deleted, Snackbar.LENGTH_LONG)
+        Snackbar.make(binding.getRoot(),
+                        noteViewModel.isTrashSupported() ? R.string.snackbar_note_trashed : R.string.snackbar_note_deleted,
+                        Snackbar.LENGTH_LONG)
                 .setDuration(UNDO_DURATION_MS)
                 .setAction(R.string.button_undo, v -> {
                     pendingDelete = null;
@@ -307,7 +315,7 @@ public class MainActivity extends SupanoteActivity implements NoteAdapter.OnNote
         Note note = pendingDelete;
         if (note == null) return;
         pendingDelete = null;
-        noteViewModel.deleteNoteAndAwait(note.getId(), success -> {
+        noteViewModel.discardNoteAndAwait(note.getId(), success -> {
             if (!success) noteViewModel.loadNotes();
         });
     }
@@ -342,11 +350,31 @@ public class MainActivity extends SupanoteActivity implements NoteAdapter.OnNote
     }
 
     @Override
-    public void onDeleteRequested(Note note) {
+    public void onActionsRequested(Note note) {
+        boolean canPin = noteViewModel.isPinSupported();
+        String[] labels = canPin
+                ? new String[] {
+                        getString(note.isPinned() ? R.string.menu_unpin : R.string.menu_pin),
+                        getString(noteViewModel.isTrashSupported() ? R.string.button_move_to_trash : R.string.button_delete)}
+                : new String[] {getString(noteViewModel.isTrashSupported() ? R.string.button_move_to_trash : R.string.button_delete)};
         new MaterialAlertDialogBuilder(this)
-                .setTitle(R.string.dialog_title_note_delete)
-                .setMessage(R.string.dialog_message_note_delete)
-                .setPositiveButton(R.string.button_delete, (d, w) -> deleteWithUndo(note))
+                .setTitle(note.getTitle())
+                .setItems(labels, (d, which) -> {
+                    if (canPin && which == 0) {
+                        noteViewModel.setPinnedAndAwait(note.getId(), !note.isPinned(), success -> { });
+                    } else {
+                        confirmDiscard(note);
+                    }
+                })
+                .show();
+    }
+
+    private void confirmDiscard(Note note) {
+        boolean trash = noteViewModel.isTrashSupported();
+        new MaterialAlertDialogBuilder(this)
+                .setTitle(trash ? R.string.dialog_title_note_trash : R.string.dialog_title_note_delete)
+                .setMessage(trash ? R.string.dialog_message_note_trash : R.string.dialog_message_note_delete)
+                .setPositiveButton(trash ? R.string.button_move_to_trash : R.string.button_delete, (d, w) -> deleteWithUndo(note))
                 .setNegativeButton(R.string.button_cancel, null)
                 .show();
     }
@@ -405,6 +433,11 @@ public class MainActivity extends SupanoteActivity implements NoteAdapter.OnNote
 
         if (id == R.id.menu_item_sort) {
             showSortDialog();
+            return true;
+        }
+
+        if (id == R.id.menu_item_trash) {
+            startActivity(new Intent(this, TrashActivity.class));
             return true;
         }
 

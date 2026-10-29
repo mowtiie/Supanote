@@ -7,6 +7,8 @@ public class Note {
     private String content;
     private String createdAt;
     private String updatedAt;
+    private boolean pinned;
+    private String deletedAt;
 
     public Note() {
         // Default constructor
@@ -54,6 +56,27 @@ public class Note {
 
     public void setUpdatedAt(String updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public boolean isPinned() {
+        return pinned;
+    }
+
+    public void setPinned(boolean pinned) {
+        this.pinned = pinned;
+    }
+
+    public String getDeletedAt() {
+        return deletedAt;
+    }
+
+    public void setDeletedAt(String deletedAt) {
+        this.deletedAt = deletedAt;
+    }
+
+    /** True when the note is in the trash. Servers without the deleted_at column never have trashed notes. */
+    public boolean isTrashed() {
+        return deletedAt != null && !deletedAt.isEmpty();
     }
 
     /**

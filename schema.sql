@@ -28,14 +28,27 @@ update notes set updated_at = created_at where updated_at is null;
 alter table notes alter column updated_at set default now();
 alter table notes alter column updated_at set not null;
 
--- 2. Keep updated_at current whenever a note is changed.
+-- 1c. Pinned notes and trash.
+--     Pinned notes are listed first. A note with deleted_at set is in the
+--     trash until it is restored or deleted for good.
+alter table notes add column if not exists pinned boolean not null default false;
+alter table notes add column if not exists deleted_at timestamptz;
+
+-- 2. Keep updated_at current whenever the text of a note changes.
+--    Pinning, trashing and restoring leave it alone, so they do not make
+--    a note look "edited".
 create or replace function public.set_updated_at()
 returns trigger
 language plpgsql
 set search_path = ''
 as $$
 begin
-  new.updated_at = now();
+  if new.title is distinct from old.title
+     or new.content is distinct from old.content then
+    new.updated_at = now();
+  else
+    new.updated_at = old.updated_at;
+  end if;
   return new;
 end;
 $$;

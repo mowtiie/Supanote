@@ -27,8 +27,8 @@ public class NoteAdapter extends ListAdapter<Note, NoteAdapter.NoteViewHolder> {
 
     public interface OnNoteAction {
         void onOpen(Note note);
-        /** The user asked to delete a note without opening it (long-press or the accessibility action). */
-        void onDeleteRequested(Note note);
+        /** The user long-pressed a note (or chose the matching accessibility action) to see what can be done with it. */
+        void onActionsRequested(Note note);
     }
 
     private final OnNoteAction actions;
@@ -49,7 +49,8 @@ public class NoteAdapter extends ListAdapter<Note, NoteAdapter.NoteViewHolder> {
         }
         @Override public boolean areContentsTheSame(@NonNull Note a, @NonNull Note b) {
             return eq(a.getTitle(), b.getTitle()) && eq(a.getContent(), b.getContent())
-                    && eq(a.getCreatedAt(), b.getCreatedAt()) && eq(a.getUpdatedAt(), b.getUpdatedAt());
+                    && eq(a.getCreatedAt(), b.getCreatedAt()) && eq(a.getUpdatedAt(), b.getUpdatedAt())
+                    && a.isPinned() == b.isPinned() && eq(a.getDeletedAt(), b.getDeletedAt());
         }
         private boolean eq(String x, String y) { return Objects.equals(x, y); }
     };
@@ -67,12 +68,14 @@ public class NoteAdapter extends ListAdapter<Note, NoteAdapter.NoteViewHolder> {
 
     class NoteViewHolder extends RecyclerView.ViewHolder {
         final TextView title, content, date;
+        final View pin;
 
         NoteViewHolder(@NonNull View itemView) {
             super(itemView);
             title = itemView.findViewById(R.id.noteTitle);
             content = itemView.findViewById(R.id.noteContent);
             date = itemView.findViewById(R.id.noteDate);
+            pin = itemView.findViewById(R.id.notePin);
         }
 
         void bind(Note note) {
@@ -84,17 +87,18 @@ public class NoteAdapter extends ListAdapter<Note, NoteAdapter.NoteViewHolder> {
             } else {
                 date.setText(formatDate(note.getCreatedAt()));
             }
+            pin.setVisibility(note.isPinned() ? View.VISIBLE : View.GONE);
             itemView.setOnClickListener(v -> actions.onOpen(note));
             itemView.setOnLongClickListener(v -> {
-                actions.onDeleteRequested(note);
+                actions.onActionsRequested(note);
                 return true;
             });
-            // Swiping to delete is not possible with a screen reader, so expose the same action to TalkBack.
+            // Swiping is not possible with a screen reader, so expose the same action to TalkBack.
             ViewCompat.replaceAccessibilityAction(itemView,
                     AccessibilityNodeInfoCompat.AccessibilityActionCompat.ACTION_LONG_CLICK,
-                    itemView.getContext().getString(R.string.button_delete),
+                    itemView.getContext().getString(R.string.label_note_actions),
                     (view, arguments) -> {
-                        actions.onDeleteRequested(note);
+                        actions.onActionsRequested(note);
                         return true;
                     });
         }

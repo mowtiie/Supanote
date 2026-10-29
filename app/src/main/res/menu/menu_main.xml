@@ -16,6 +16,11 @@
         app:showAsAction="ifRoom" />
 
     <item
+        android:id="@+id/menu_item_trash"
+        android:title="@string/menu_trash"
+        app:showAsAction="never"/>
+
+    <item
         android:id="@+id/menu_item_settings"
         android:title="@string/menu_settings"
         app:showAsAction="never"/>

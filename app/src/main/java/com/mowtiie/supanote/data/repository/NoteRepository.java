@@ -8,13 +8,18 @@ import com.mowtiie.supanote.data.local.ConnectionManager;
 import com.mowtiie.supanote.data.local.SessionManager;
 import com.mowtiie.supanote.data.model.Note;
 import com.mowtiie.supanote.data.remote.ApiException;
+import com.mowtiie.supanote.data.remote.ServerFeatures;
 
 import okhttp3.*;
 import org.json.*;
 
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
+import java.util.TimeZone;
 
 public class NoteRepository {
 
@@ -26,12 +31,14 @@ public class NoteRepository {
     private final ConnectionManager connection;
     private final SessionManager session;
     private final OkHttpClient client;
+    private final ServerFeatures features;
     private final Handler main = new Handler(Looper.getMainLooper());
 
-    public NoteRepository(ConnectionManager connection, SessionManager session, OkHttpClient client) {
+    public NoteRepository(ConnectionManager connection, SessionManager session, OkHttpClient client, ServerFeatures features) {
         this.connection = connection;
         this.session = session;
         this.client = client;
+        this.features = features;
     }
 
     public interface Callback<T> { void onSuccess(T result); void onError(Exception e); }
@@ -116,9 +123,16 @@ public class NoteRepository {
     }
 
     // ---------------------------- READ ----------------------------
-    /** Loads every note, one page at a time so no single response has to hold the whole table. */
+    /** Loads every note that is not in the trash, one page at a time so no single response has to hold the whole table. */
     public void getNotes(Callback<List<Note>> cb) {
-        collectPages(0, new ArrayList<>(), cb);
+        collectPages(0, new ArrayList<>(), new Callback<List<Note>>() {
+            @Override public void onSuccess(List<Note> all) {
+                List<Note> active = new ArrayList<>();
+                for (Note n : all) if (!n.isTrashed()) active.add(n);
+                cb.onSuccess(active);
+            }
+            @Override public void onError(Exception e) { cb.onError(e); }
+        });
     }
 
     private void collectPages(int offset, List<Note> collected, Callback<List<Note>> cb) {
@@ -156,11 +170,13 @@ public class NoteRepository {
     }
 
     // ---------------------------- CREATE ----------------------------
-    public void addNote(String title, String content, Callback<Note> cb) {
+    public void addNote(String title, String content, boolean pinned, Callback<Note> cb) {
         JSONObject obj = new JSONObject();
         try {
             obj.put("title", title);
             obj.put("content", content);
+            // Only sent when set, so creating an ordinary note works on a server without the pinned column.
+            if (pinned) obj.put("pinned", true);
         } catch (JSONException e) { cb.onError(e); return; }
 
         Request req = base(rest() + TABLE)
@@ -172,13 +188,45 @@ public class NoteRepository {
     }
 
     // ---------------------------- UPDATE ----------------------------
-    public void updateNote(long id, String title, String content, Callback<Note> cb) {
+    /** @param pinned the new pinned state, or null to leave it as it is (also keeps old servers working) */
+    public void updateNote(long id, String title, String content, Boolean pinned, Callback<Note> cb) {
         JSONObject obj = new JSONObject();
         try {
             obj.put("title", title);
             obj.put("content", content);
+            if (pinned != null) obj.put("pinned", pinned.booleanValue());
         } catch (JSONException e) { cb.onError(e); return; }
+        patch(id, obj, cb);
+    }
 
+    public void setPinned(long id, boolean pinned, Callback<Note> cb) {
+        JSONObject obj = new JSONObject();
+        try {
+            obj.put("pinned", pinned);
+        } catch (JSONException e) { cb.onError(e); return; }
+        patch(id, obj, cb);
+    }
+
+    /** Moves a note to the trash. The marker only needs to be non-null; it is not compared to the server clock. */
+    public void moveToTrash(long id, Callback<Note> cb) {
+        JSONObject obj = new JSONObject();
+        try {
+            SimpleDateFormat iso = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.US);
+            iso.setTimeZone(TimeZone.getTimeZone("UTC"));
+            obj.put("deleted_at", iso.format(new Date()));
+        } catch (JSONException e) { cb.onError(e); return; }
+        patch(id, obj, cb);
+    }
+
+    public void restoreFromTrash(long id, Callback<Note> cb) {
+        JSONObject obj = new JSONObject();
+        try {
+            obj.put("deleted_at", JSONObject.NULL);
+        } catch (JSONException e) { cb.onError(e); return; }
+        patch(id, obj, cb);
+    }
+
+    private void patch(long id, JSONObject obj, Callback<Note> cb) {
         Request req = base(rest() + TABLE + "?id=eq." + id)
                 .addHeader("Content-Type", "application/json")
                 .addHeader("Prefer", "return=representation")
@@ -190,6 +238,23 @@ public class NoteRepository {
     // ---------------------------- DELETE ----------------------------
     public void deleteNote(long id, Callback<Void> cb) {
         Request req = base(rest() + TABLE + "?id=eq." + id).delete().build();
+        client.newCall(req).enqueue(new okhttp3.Callback() {
+            @Override public void onFailure(Call call, IOException e) { fail(cb, e); }
+            @Override public void onResponse(Call call, Response res) {
+                try (ResponseBody b = res.body()) {
+                    if (!res.isSuccessful()) {
+                        String body = b != null ? b.string() : "";
+                        throw ApiException.of(res.code(), body);
+                    }
+                    main.post(() -> cb.onSuccess(null));
+                } catch (Exception e) { fail(cb, e); }
+            }
+        });
+    }
+
+    /** Permanently deletes every note that is in the trash. */
+    public void emptyTrash(Callback<Void> cb) {
+        Request req = base(rest() + TABLE + "?deleted_at=not.is.null").delete().build();
         client.newCall(req).enqueue(new okhttp3.Callback() {
             @Override public void onFailure(Call call, IOException e) { fail(cb, e); }
             @Override public void onResponse(Call call, Response res) {
@@ -223,9 +288,16 @@ public class NoteRepository {
     private List<Note> parseNotes(String json) throws JSONException {
         List<Note> list = new ArrayList<>();
         JSONArray arr = new JSONArray(json);
+        if (arr.length() > 0) {
+            // select=* returns every column, so a missing key means the user has not upgraded their schema.
+            JSONObject first = arr.getJSONObject(0);
+            features.update(first.has("pinned"), first.has("deleted_at"));
+        }
         for (int i = 0; i < arr.length(); i++) {
             JSONObject o = arr.getJSONObject(i);
             Note n = new Note();
+            n.setPinned(!o.isNull("pinned") && o.optBoolean("pinned", false));
+            n.setDeletedAt(o.isNull("deleted_at") ? null : o.optString("deleted_at", null));
             n.setId(o.optLong("id"));
             n.setTitle(o.optString("title"));
             // optString turns a JSON null into the text "null", so check for null explicitly.

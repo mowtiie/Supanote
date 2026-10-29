@@ -9,7 +9,9 @@ import androidx.lifecycle.MutableLiveData;
 import com.mowtiie.supanote.R;
 import com.mowtiie.supanote.SupanoteApp;
 import com.mowtiie.supanote.data.model.Note;
+import com.mowtiie.supanote.data.remote.ApiException;
 import com.mowtiie.supanote.data.remote.NetworkErrors;
+import com.mowtiie.supanote.data.remote.ServerFeatures;
 import com.mowtiie.supanote.data.repository.NoteRepository;
 
 import org.jspecify.annotations.NonNull;
@@ -20,6 +22,7 @@ import java.util.List;
 public class NoteViewModel extends AndroidViewModel {
 
     private final NoteRepository repo;
+    private final ServerFeatures features;
 
     private final MutableLiveData<List<Note>> notes = new MutableLiveData<>(new ArrayList<>());
     private final MutableLiveData<Boolean> loading = new MutableLiveData<>(false);
@@ -37,7 +40,8 @@ public class NoteViewModel extends AndroidViewModel {
     public NoteViewModel(@NonNull Application app) {
         super(app);
         SupanoteApp supanoteApp = (SupanoteApp) app;
-        repo = new NoteRepository(supanoteApp.connection(), supanoteApp.session(), supanoteApp.authedHttpClient());
+        repo = new NoteRepository(supanoteApp.connection(), supanoteApp.session(), supanoteApp.authedHttpClient(), supanoteApp.features());
+        features = supanoteApp.features();
     }
 
     private List<Note> currentList() {
@@ -89,8 +93,8 @@ public class NoteViewModel extends AndroidViewModel {
         repo.getNote(id, cb);
     }
 
-    public void addNoteAndAwait(String title, String content, CompletionCallback cb) {
-        repo.addNote(title, content, new NoteRepository.Callback<Note>() {
+    public void addNoteAndAwait(String title, String content, boolean pinned, CompletionCallback cb) {
+        repo.addNote(title, content, pinned, new NoteRepository.Callback<Note>() {
             @Override public void onSuccess(Note note) {
                 if (note != null) {
                     List<Note> c = currentList();
@@ -106,8 +110,8 @@ public class NoteViewModel extends AndroidViewModel {
         });
     }
 
-    public void updateNoteAndAwait(long id, String title, String content, CompletionCallback cb) {
-        repo.updateNote(id, title, content, new NoteRepository.Callback<Note>() {
+    public void updateNoteAndAwait(long id, String title, String content, Boolean pinned, CompletionCallback cb) {
+        repo.updateNote(id, title, content, pinned, new NoteRepository.Callback<Note>() {
             @Override public void onSuccess(Note updated) {
                 if (updated != null) {
                     List<Note> c = currentList();
@@ -125,7 +129,70 @@ public class NoteViewModel extends AndroidViewModel {
         });
     }
 
+    public boolean isPinSupported() { return features.isPinSupported(); }
+    public boolean isTrashSupported() { return features.isTrashSupported(); }
+
+    /** Replaces the cached copy of a note with the server's version of it. */
+    private void replaceInList(Note updated) {
+        if (updated == null) return;
+        List<Note> c = currentList();
+        for (int i = 0; i < c.size(); i++) {
+            if (c.get(i).getId() == updated.getId()) { c.set(i, updated); break; }
+        }
+        notes.setValue(c);
+    }
+
+    private NoteRepository.Callback<Note> patched(CompletionCallback cb) {
+        return new NoteRepository.Callback<Note>() {
+            @Override public void onSuccess(Note updated) {
+                replaceInList(updated);
+                if (cb != null) cb.onComplete(true);
+            }
+            @Override public void onError(Exception e) {
+                error.setValue(friendlyError(e));
+                if (cb != null) cb.onComplete(false);
+            }
+        };
+    }
+
+    public void setPinnedAndAwait(long id, boolean pinned, CompletionCallback cb) {
+        repo.setPinned(id, pinned, patched(cb));
+    }
+
+    public void restoreNoteAndAwait(long id, CompletionCallback cb) {
+        repo.restoreFromTrash(id, patched(cb));
+    }
+
+    /**
+     * Gets a note out of the list: into the trash, or deleted for good on a server that has no trash column yet.
+     * Callers decide which wording to show with {@link #isTrashSupported()}.
+     */
+    public void discardNoteAndAwait(long id, CompletionCallback cb) {
+        if (features.isTrashSupported()) repo.moveToTrash(id, patched(cb));
+        else deleteNoteAndAwait(id, cb);
+    }
+
+    public void emptyTrashAndAwait(CompletionCallback cb) {
+        repo.emptyTrash(new NoteRepository.Callback<Void>() {
+            @Override public void onSuccess(Void result) {
+                List<Note> c = currentList();
+                c.removeIf(Note::isTrashed);
+                notes.setValue(c);
+                cb.onComplete(true);
+            }
+            @Override public void onError(Exception e) {
+                error.setValue(friendlyError(e));
+                cb.onComplete(false);
+            }
+        });
+    }
+
     private String friendlyError(Exception e) {
+        // A missing pinned/deleted_at column: the user has not re-run schema.sql after updating the app.
+        if (e instanceof ApiException && ((ApiException) e).getCode() == 400
+                && e.getMessage() != null && e.getMessage().contains("column")) {
+            return getApplication().getString(R.string.error_schema_outdated);
+        }
         if (NetworkErrors.isConnectivityProblem(e)) {
             return getApplication().getString(R.string.error_server_unreachable);
         }

@@ -9,6 +9,12 @@
         app:showAsAction="ifRoom" />
 
     <item
+        android:id="@+id/menu_item_pin"
+        android:title="@string/menu_pin"
+        android:icon="@drawable/ic_pin"
+        app:showAsAction="ifRoom" />
+
+    <item
         android:id="@+id/menu_item_delete"
         android:title="@string/menu_delete"
         android:icon="@drawable/ic_delete"
