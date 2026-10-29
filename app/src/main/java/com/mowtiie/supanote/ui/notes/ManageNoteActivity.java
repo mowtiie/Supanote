@@ -2,6 +2,8 @@ package com.mowtiie.supanote.ui.notes;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
@@ -79,6 +81,15 @@ public class ManageNoteActivity extends SupanoteActivity {
             setTitle(R.string.toolbar_title_note_new);
             binding.noteInputTitle.requestFocus();
         }
+
+        // Clear the "title cannot be empty" error as soon as the user starts typing a title.
+        binding.noteInputTitle.addTextChangedListener(new TextWatcher() {
+            @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
+            @Override public void onTextChanged(CharSequence s, int start, int before, int count) {
+                binding.noteTitleLayout.setError(null);
+            }
+            @Override public void afterTextChanged(Editable s) { }
+        });
 
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override public void handleOnBackPressed() {
@@ -160,8 +171,9 @@ public class ManageNoteActivity extends SupanoteActivity {
         String title = binding.noteInputTitle.getText() == null ? "" : binding.noteInputTitle.getText().toString().trim();
         String content = binding.noteInputContent.getText() == null ? "" : binding.noteInputContent.getText().toString().trim();
 
+        binding.noteTitleLayout.setError(null);
         if (title.isEmpty()) {
-            binding.noteInputTitle.setError(getString(R.string.error_note_empty_title));
+            binding.noteTitleLayout.setError(getString(R.string.error_note_empty_title));
             binding.noteInputTitle.requestFocus();
             return;
         }

@@ -31,7 +31,7 @@
     <string name="label_list_offline">Couldn\'t load your notes. Check your connection and try again.</string>
     <string name="label_list_empty">No notes yet — tap + to add one</string>
     <string name="label_note_edited">Edited %1$s</string>
-    <string name="label_list_empty_search">No notes match "%s"</string>
+    <string name="label_list_empty_search">No notes match \"%s\"</string>
 
     <!-- INTENT EXTRAS -->
     <string name="extra_crash_email_subject">Supanote crash report</string>

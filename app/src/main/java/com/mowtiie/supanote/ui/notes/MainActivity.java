@@ -46,6 +46,7 @@ import java.util.Map;
 
 public class MainActivity extends SupanoteActivity implements NoteAdapter.OnNoteAction {
 
+    private static final int UNDO_DURATION_MS = 6000;
     private static final String STATE_SEARCH_QUERY = "state_search_query";
 
     private enum Sort { NEWEST, OLDEST, TITLE_AZ, TITLE_ZA }
@@ -219,7 +220,14 @@ public class MainActivity extends SupanoteActivity implements NoteAdapter.OnNote
                 break;
         }
 
-        noteAdapter.submitList(result);
+        // Notes arriving above the first visible one (e.g. after an import) would otherwise keep the list anchored to
+        // an old note far below. If the user was looking at the top, stay at the top.
+        RecyclerView.LayoutManager layoutManager = binding.notesRecycler.getLayoutManager();
+        boolean wasAtTop = !(layoutManager instanceof LinearLayoutManager)
+                || ((LinearLayoutManager) layoutManager).findFirstCompletelyVisibleItemPosition() <= 0;
+        noteAdapter.submitList(result, () -> {
+            if (wasAtTop && binding != null) binding.notesRecycler.scrollToPosition(0);
+        });
         updateEmptyState(result.isEmpty());
     }
 
@@ -279,7 +287,9 @@ public class MainActivity extends SupanoteActivity implements NoteAdapter.OnNote
         pendingDelete = note;
         noteViewModel.removeFromList(note.getId());
 
+        // LENGTH_LONG is only about 3 seconds, which is short for an undo.
         Snackbar.make(binding.getRoot(), R.string.snackbar_note_deleted, Snackbar.LENGTH_LONG)
+                .setDuration(UNDO_DURATION_MS)
                 .setAction(R.string.button_undo, v -> {
                     pendingDelete = null;
                     noteViewModel.loadNotes();
@@ -376,10 +386,14 @@ public class MainActivity extends SupanoteActivity implements NoteAdapter.OnNote
             });
 
             // Re-open the search bar with the query that was active before the activity was recreated.
+            // Expanding during menu creation leaves the toolbar's other items (Sort) hidden after the search is
+            // closed again, so wait until the toolbar has laid out its menu.
             if (!searchQuery.isEmpty()) {
                 String restored = searchQuery;
-                searchItem.expandActionView();
-                searchView.setQuery(restored, false);
+                binding.toolbar.post(() -> {
+                    if (!searchItem.isActionViewExpanded()) searchItem.expandActionView();
+                    searchView.setQuery(restored, false);
+                });
             }
         }
         return true;
