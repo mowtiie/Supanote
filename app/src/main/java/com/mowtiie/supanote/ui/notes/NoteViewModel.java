@@ -151,7 +151,9 @@ public class NoteViewModel extends AndroidViewModel {
                 // Saved notes are still on screen: say they may be out of date instead of showing an empty error page.
                 stale.setValue(!currentList().isEmpty());
                 error.setValue(friendlyError(e));
-                refreshPendingCount();
+                // Show what is on the device, which includes changes made on other screens (a note made offline, say)
+                // that this list has not seen yet.
+                reloadFromCache();
             }
         });
     }
