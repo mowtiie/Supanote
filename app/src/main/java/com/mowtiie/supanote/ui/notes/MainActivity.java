@@ -172,6 +172,10 @@ public class MainActivity extends SupanoteActivity implements NoteAdapter.OnNote
             }
         });
 
+        noteViewModel.getStale().observe(this, stale ->
+                binding.offlineBanner.setVisibility(Boolean.TRUE.equals(stale) ? View.VISIBLE : View.GONE));
+        binding.offlineBanner.setOnClickListener(v -> noteViewModel.loadNotes());
+
         noteViewModel.getError().observe(this, msg -> {
             if (msg != null) {
                 if (redirectIfSessionLost()) return;

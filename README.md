@@ -19,6 +19,7 @@ Supanote is a simple, open-source notes app that connects to your own Supabase b
 * **Search and sort:** Filter by title or content, and sort by newest, oldest, or title.
 * **Tags:** Label notes and filter the list by one or more tags.
 * **Archive:** Move notes you want to keep out of the main list, and bring them back any time.
+* **Offline reading:** Your notes are saved on the device (encrypted), so the list opens instantly and still works without a connection. Editing needs a connection.
 * **Pin and trash:** Pin notes to keep them at the top. Deleted notes go to the trash first, where you can restore them or delete them for good.
 * **Backup:** Export your notes to a JSON file and import them back.
 * **Themes and privacy:** Light, dark, and dynamic colors, plus an optional screen privacy mode that blocks screenshots.
@@ -53,7 +54,7 @@ To use another server later, go to **Settings → Change server**.
 * No analytics or telemetry. The app only talks to your server, and crash reports are only shared if you choose to send them.
 * Notes are **not end-to-end encrypted**: whoever runs the server can read them. Row Level Security only keeps other users out.
 * Importing a backup always adds new notes, so importing the same file twice creates duplicates, and original creation dates are not kept.
-* Not included: offline mode and folders.
+* Not included: offline editing and folders.
 
 ## Verifying a download
 

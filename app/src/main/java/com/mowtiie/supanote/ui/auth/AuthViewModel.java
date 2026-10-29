@@ -41,6 +41,7 @@ public class AuthViewModel extends AndroidViewModel {
 
     public void signOut() {
         repo.signOut();
+        ((SupanoteApp) getApplication()).clearCachedNotes();
     }
 
     private AuthRepository.Callback cb() {

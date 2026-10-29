@@ -5,10 +5,16 @@
         <exclude domain="sharedpref" path="supabase_session_v2.xml"/>
         <exclude domain="sharedpref" path="supabase_session_secure.xml"/>
         <exclude domain="sharedpref" path="supabase_connection.xml"/>
+        <exclude domain="database" path="supanote_cache.db"/>
+        <exclude domain="database" path="supanote_cache.db-wal"/>
+        <exclude domain="database" path="supanote_cache.db-shm"/>
     </cloud-backup>
     <device-transfer>
         <exclude domain="sharedpref" path="supabase_session_v2.xml"/>
         <exclude domain="sharedpref" path="supabase_session_secure.xml"/>
         <exclude domain="sharedpref" path="supabase_connection.xml"/>
+        <exclude domain="database" path="supanote_cache.db"/>
+        <exclude domain="database" path="supanote_cache.db-wal"/>
+        <exclude domain="database" path="supanote_cache.db-shm"/>
     </device-transfer>
 </data-extraction-rules>

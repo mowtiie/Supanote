@@ -33,6 +33,7 @@
     <string name="label_server_setup_description">Create a free Supabase project, run the setup SQL from the README, then paste your Project URL and publishable (anon) key below.</string>
     <string name="label_loading_notes">Loading notes…</string>
     <string name="content_description_add_note">Add note</string>
+    <string name="label_offline_banner">Showing saved notes. Couldn\'t reach the server. Tap to try again.</string>
     <string name="label_list_offline">Couldn\'t load your notes. Check your connection and try again.</string>
     <string name="label_list_empty">No notes yet — tap + to add one</string>
     <string name="label_note_edited">Edited %1$s</string>

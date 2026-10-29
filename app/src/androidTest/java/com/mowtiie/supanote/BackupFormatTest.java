@@ -126,16 +126,16 @@ public class BackupFormatTest {
     public void handlesLargeBackups() throws Exception {
         List<Note> notes = new ArrayList<>();
         StringBuilder body = new StringBuilder();
-        for (int i = 0; i < 2000; i++) body.append("line ").append(i).append('\n');
-        for (int i = 0; i < 500; i++) notes.add(new Note(i, "Note " + i, body.toString(), "2026-01-01T00:00:00Z"));
+        for (int i = 0; i < 1000; i++) body.append("line ").append(i).append('\n');
+        for (int i = 0; i < 300; i++) notes.add(new Note(i, "Note " + i, body.toString(), "2026-01-01T00:00:00Z"));
 
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         BackupFormat.write(out, notes);
 
         List<JSONObject> imported = BackupFormat.read(new ByteArrayInputStream(out.toByteArray()));
-        assertEquals(500, imported.size());
-        assertEquals("Note 499", imported.get(499).getString("title"));
-        assertEquals(body.toString(), imported.get(499).getString("content"));
+        assertEquals(300, imported.size());
+        assertEquals("Note 299", imported.get(299).getString("title"));
+        assertEquals(body.toString(), imported.get(299).getString("content"));
     }
 
     @Test

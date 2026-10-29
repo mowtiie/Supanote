@@ -8,16 +8,19 @@ import androidx.lifecycle.MutableLiveData;
 
 import com.mowtiie.supanote.R;
 import com.mowtiie.supanote.SupanoteApp;
+import com.mowtiie.supanote.data.cache.NoteCache;
 import com.mowtiie.supanote.data.model.Note;
 import com.mowtiie.supanote.data.remote.ApiException;
 import com.mowtiie.supanote.data.remote.NetworkErrors;
 import com.mowtiie.supanote.data.remote.ServerFeatures;
 import com.mowtiie.supanote.data.repository.NoteRepository;
+import com.mowtiie.supanote.data.repository.NoteLoader;
 
 import org.jspecify.annotations.NonNull;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Executor;
 
 public class NoteViewModel extends AndroidViewModel {
 
@@ -27,6 +30,10 @@ public class NoteViewModel extends AndroidViewModel {
     private final MutableLiveData<List<Note>> notes = new MutableLiveData<>(new ArrayList<>());
     private final MutableLiveData<Boolean> loading = new MutableLiveData<>(false);
     private final MutableLiveData<String> error = new MutableLiveData<>();
+    private final MutableLiveData<Boolean> stale = new MutableLiveData<>(false);
+    private final NoteLoader loader;
+    private final NoteCache cache;
+    private final Executor cacheExecutor;
 
     /** Bumped on every reload so a slow, superseded load cannot overwrite newer results. */
     private int loadGeneration;
@@ -35,6 +42,9 @@ public class NoteViewModel extends AndroidViewModel {
     public LiveData<Boolean> getLoading() { return loading; }
     public LiveData<String> getError() { return error; }
 
+    /** True when the last refresh failed and the notes shown are only the saved copy. */
+    public LiveData<Boolean> getStale() { return stale; }
+
     public void clearError() { error.setValue(null); }
 
     public NoteViewModel(@NonNull Application app) {
@@ -42,6 +52,9 @@ public class NoteViewModel extends AndroidViewModel {
         SupanoteApp supanoteApp = (SupanoteApp) app;
         repo = new NoteRepository(supanoteApp.connection(), supanoteApp.session(), supanoteApp.authedHttpClient(), supanoteApp.features(), supanoteApp.mainThread());
         features = supanoteApp.features();
+        cache = supanoteApp.cache();
+        cacheExecutor = supanoteApp.cacheExecutor();
+        loader = new NoteLoader(repo, cache, cacheExecutor, supanoteApp.mainThread());
     }
 
     private List<Note> currentList() {
@@ -56,30 +69,28 @@ public class NoteViewModel extends AndroidViewModel {
      */
     public void loadNotes() {
         final int generation = ++loadGeneration;
-        final boolean progressive = currentList().isEmpty();
+        final boolean empty = currentList().isEmpty();
         loading.setValue(true);
-        loadPage(generation, progressive, 0, new ArrayList<>());
-    }
 
-    private void loadPage(int generation, boolean progressive, int offset, List<Note> collected) {
-        repo.getNotesPage(offset, NoteRepository.PAGE_SIZE, new NoteRepository.Callback<List<Note>>() {
-            @Override
-            public void onSuccess(List<Note> page) {
+        // With nothing on screen the saved copy is shown first; over a list that is already visible there is no need.
+        loader.load(empty, empty, new NoteLoader.Listener() {
+            @Override public void onCached(List<Note> saved) {
                 if (generation != loadGeneration) return;
-                collected.addAll(page);
-                boolean last = page.size() < NoteRepository.PAGE_SIZE;
-
-                if (progressive || last) {
-                    notes.setValue(new ArrayList<>(collected));
-                    loading.setValue(false);
-                }
-                if (!last) loadPage(generation, progressive, offset + NoteRepository.PAGE_SIZE, collected);
+                notes.setValue(saved);
             }
 
-            @Override
-            public void onError(Exception e) {
+            @Override public void onNotes(List<Note> fresh, boolean complete) {
+                if (generation != loadGeneration) return;
+                notes.setValue(fresh);
+                loading.setValue(false);
+                if (complete) stale.setValue(false);
+            }
+
+            @Override public void onFailed(Exception e) {
                 if (generation != loadGeneration) return;
                 loading.setValue(false);
+                // Saved notes are still on screen: say they may be out of date instead of showing an empty error page.
+                stale.setValue(!currentList().isEmpty());
                 error.setValue(friendlyError(e));
             }
         });
@@ -97,6 +108,7 @@ public class NoteViewModel extends AndroidViewModel {
         repo.addNote(title, content, pinned, tags, new NoteRepository.Callback<Note>() {
             @Override public void onSuccess(Note note) {
                 if (note != null) {
+                    saveToCache(note);
                     List<Note> c = currentList();
                     c.add(0, note);
                     notes.setValue(c);
@@ -114,6 +126,7 @@ public class NoteViewModel extends AndroidViewModel {
         repo.updateNote(id, title, content, pinned, tags, archived, new NoteRepository.Callback<Note>() {
             @Override public void onSuccess(Note updated) {
                 if (updated != null) {
+                    saveToCache(updated);
                     List<Note> c = currentList();
                     for (int i = 0; i < c.size(); i++) {
                         if (c.get(i).getId() == updated.getId()) { c.set(i, updated); break; }
@@ -134,9 +147,19 @@ public class NoteViewModel extends AndroidViewModel {
     public boolean isTagsSupported() { return features.isTagsSupported(); }
     public boolean isArchiveSupported() { return features.isArchiveSupported(); }
 
+    /** Keeps the saved copy in step with what the server just confirmed. */
+    private void saveToCache(Note note) {
+        cacheExecutor.execute(() -> cache.upsert(note));
+    }
+
+    private void removeFromCache(long id) {
+        cacheExecutor.execute(() -> cache.remove(id));
+    }
+
     /** Replaces the cached copy of a note with the server's version of it. */
     private void replaceInList(Note updated) {
         if (updated == null) return;
+        saveToCache(updated);
         List<Note> c = currentList();
         for (int i = 0; i < c.size(); i++) {
             if (c.get(i).getId() == updated.getId()) { c.set(i, updated); break; }
@@ -183,6 +206,7 @@ public class NoteViewModel extends AndroidViewModel {
             @Override public void onSuccess(Void result) {
                 List<Note> c = currentList();
                 c.removeIf(Note::isTrashed);
+                cacheExecutor.execute(cache::removeTrashed);
                 notes.setValue(c);
                 cb.onComplete(true);
             }
@@ -221,6 +245,7 @@ public class NoteViewModel extends AndroidViewModel {
     public void deleteNoteAndAwait(long id, CompletionCallback cb) {
         repo.deleteNote(id, new NoteRepository.Callback<Void>() {
             @Override public void onSuccess(Void result) {
+                removeFromCache(id);
                 List<Note> c = currentList();
                 for (int i = 0; i < c.size(); i++) {
                     if (c.get(i).getId() == id) { c.remove(i); break; }

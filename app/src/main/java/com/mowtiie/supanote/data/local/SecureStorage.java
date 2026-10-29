@@ -84,7 +84,7 @@ public class SecureStorage {
         }
     }
 
-    private static SecretKey getOrCreateKey(String alias) throws GeneralSecurityException {
+    static SecretKey getOrCreateKey(String alias) throws GeneralSecurityException {
         try {
             KeyStore keyStore = KeyStore.getInstance(ANDROID_KEYSTORE);
             keyStore.load(null);

@@ -363,6 +363,7 @@ public class SettingsActivity extends SupanoteActivity {
                         SupanoteApp app = (SupanoteApp) requireActivity().getApplication();
                         // Revoke the session on the old server (best effort) before forgetting it.
                         new AuthRepository(app, app.connection(), app.session(), app.httpClient(), app.mainThread()).signOut();
+                        app.clearCachedNotes();
                         app.connection().clear();
                         Intent intent = new Intent(requireContext(), SetupActivity.class);
                         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);

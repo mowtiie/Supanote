@@ -98,6 +98,8 @@ dependencies {
     implementation(libs.swiperefreshlayout)
     implementation(libs.material)
     implementation(libs.preference)
+    implementation(libs.room.runtime)
+    annotationProcessor(libs.room.compiler)
     testImplementation(libs.junit)
     testImplementation(libs.mockwebserver)
     testImplementation(libs.mockito.core)
