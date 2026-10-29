@@ -26,6 +26,7 @@
     <string name="toolbar_title_note_edit">Edit note</string>
     <string name="toolbar_title_note_new">New note</string>
     <string name="toolbar_title_trash">Trash</string>
+    <string name="toolbar_title_archive">Archive</string>
 
     <!-- LABELS -->
     <string name="label_server_setup_heading">Server Setup</string>
@@ -45,6 +46,7 @@
     </plurals>
     <string name="label_note_actions">Note actions</string>
     <string name="label_trash_empty">Trash is empty</string>
+    <string name="label_archive_empty">No archived notes</string>
     <string name="label_list_empty_search">No notes match \"%s\"</string>
 
     <!-- INTENT EXTRAS -->
@@ -131,8 +133,10 @@
     <string name="button_move_to_trash">Move to trash</string>
     <string name="button_restore">Restore</string>
     <string name="button_delete_forever">Delete forever</string>
-    <string name="snackbar_schema_outdated">Your database is missing newer columns. Re-run schema.sql to enable pins, trash and tags.</string>
+    <string name="snackbar_schema_outdated">Your database is missing newer columns. Re-run schema.sql to enable pins, trash, tags and archive.</string>
     <string name="snackbar_note_trashed">Moved to trash</string>
+    <string name="snackbar_note_archived">Note archived</string>
+    <string name="toast_note_archive_failed">Could not archive, try again later.</string>
     <string name="dialog_title_note_trash">Move to trash?</string>
     <string name="dialog_message_note_trash">You can restore it from the trash later.</string>
     <string name="dialog_title_delete_forever">Delete forever?</string>
@@ -151,6 +155,8 @@
     <string name="menu_delete">Delete</string>
     <string name="menu_trash">Trash</string>
     <string name="menu_pin">Pin</string>
+    <string name="menu_archive">Archive</string>
+    <string name="menu_unarchive">Unarchive</string>
     <string name="menu_unpin">Unpin</string>
     <string name="menu_empty_trash">Empty trash</string>
 

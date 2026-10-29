@@ -11,6 +11,7 @@ public class Note {
     private String createdAt;
     private String updatedAt;
     private boolean pinned;
+    private boolean archived;
     private String deletedAt;
     private List<String> tags = new ArrayList<>();
 
@@ -69,6 +70,14 @@ public class Note {
 
     public void setTags(List<String> tags) {
         this.tags = tags == null ? new ArrayList<>() : tags;
+    }
+
+    public boolean isArchived() {
+        return archived;
+    }
+
+    public void setArchived(boolean archived) {
+        this.archived = archived;
     }
 
     public boolean isPinned() {

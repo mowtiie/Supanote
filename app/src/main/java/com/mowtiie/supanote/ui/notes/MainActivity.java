@@ -145,7 +145,7 @@ public class MainActivity extends SupanoteActivity implements NoteAdapter.OnNote
         noteViewModel.getNotes().observe(this, notes -> {
             allNotes = new ArrayList<>();
             if (notes != null) {
-                for (Note n : notes) if (!n.isTrashed()) allNotes.add(n);
+                for (Note n : notes) if (!n.isTrashed() && !n.isArchived()) allNotes.add(n);
             }
             rebuildSearchIndex();
             rebuildTagBar();
@@ -260,7 +260,8 @@ public class MainActivity extends SupanoteActivity implements NoteAdapter.OnNote
 
     private void showSchemaHintOnce() {
         if (schemaHintShown || allNotes.isEmpty()) return;
-        if (noteViewModel.isPinSupported() && noteViewModel.isTrashSupported() && noteViewModel.isTagsSupported()) return;
+        if (noteViewModel.isPinSupported() && noteViewModel.isTrashSupported() && noteViewModel.isTagsSupported()
+                && noteViewModel.isArchiveSupported()) return;
         schemaHintShown = true;
         Snackbar.make(binding.getRoot(), R.string.snackbar_schema_outdated, Snackbar.LENGTH_LONG)
                 .setDuration(UNDO_DURATION_MS + 4000)
@@ -414,22 +415,34 @@ public class MainActivity extends SupanoteActivity implements NoteAdapter.OnNote
 
     @Override
     public void onActionsRequested(Note note) {
-        boolean canPin = noteViewModel.isPinSupported();
-        String[] labels = canPin
-                ? new String[] {
-                        getString(note.isPinned() ? R.string.menu_unpin : R.string.menu_pin),
-                        getString(noteViewModel.isTrashSupported() ? R.string.button_move_to_trash : R.string.button_delete)}
-                : new String[] {getString(noteViewModel.isTrashSupported() ? R.string.button_move_to_trash : R.string.button_delete)};
+        List<String> labels = new ArrayList<>();
+        List<Runnable> actions = new ArrayList<>();
+
+        if (noteViewModel.isPinSupported()) {
+            labels.add(getString(note.isPinned() ? R.string.menu_unpin : R.string.menu_pin));
+            actions.add(() -> noteViewModel.setPinnedAndAwait(note.getId(), !note.isPinned(), success -> { }));
+        }
+        if (noteViewModel.isArchiveSupported()) {
+            labels.add(getString(R.string.menu_archive));
+            actions.add(() -> archive(note));
+        }
+        labels.add(getString(noteViewModel.isTrashSupported() ? R.string.button_move_to_trash : R.string.button_delete));
+        actions.add(() -> confirmDiscard(note));
+
         new MaterialAlertDialogBuilder(this)
                 .setTitle(note.getTitle())
-                .setItems(labels, (d, which) -> {
-                    if (canPin && which == 0) {
-                        noteViewModel.setPinnedAndAwait(note.getId(), !note.isPinned(), success -> { });
-                    } else {
-                        confirmDiscard(note);
-                    }
-                })
+                .setItems(labels.toArray(new String[0]), (d, which) -> actions.get(which).run())
                 .show();
+    }
+
+    private void archive(Note note) {
+        noteViewModel.setArchivedAndAwait(note.getId(), true, success -> {
+            if (!success) return;
+            Snackbar.make(binding.getRoot(), R.string.snackbar_note_archived, Snackbar.LENGTH_LONG)
+                    .setDuration(UNDO_DURATION_MS)
+                    .setAction(R.string.button_undo, v -> noteViewModel.setArchivedAndAwait(note.getId(), false, ok -> { }))
+                    .show();
+        });
     }
 
     private void confirmDiscard(Note note) {
@@ -496,6 +509,15 @@ public class MainActivity extends SupanoteActivity implements NoteAdapter.OnNote
 
         if (id == R.id.menu_item_sort) {
             showSortDialog();
+            return true;
+        }
+
+        if (id == R.id.menu_item_archive) {
+            if (noteViewModel.isArchiveSupported()) {
+                startActivity(new Intent(this, ArchiveActivity.class));
+            } else {
+                Snackbar.make(binding.getRoot(), R.string.snackbar_schema_outdated, Snackbar.LENGTH_LONG).show();
+            }
             return true;
         }
 

@@ -110,8 +110,8 @@ public class NoteViewModel extends AndroidViewModel {
         });
     }
 
-    public void updateNoteAndAwait(long id, String title, String content, Boolean pinned, List<String> tags, CompletionCallback cb) {
-        repo.updateNote(id, title, content, pinned, tags, new NoteRepository.Callback<Note>() {
+    public void updateNoteAndAwait(long id, String title, String content, Boolean pinned, List<String> tags, Boolean archived, CompletionCallback cb) {
+        repo.updateNote(id, title, content, pinned, tags, archived, new NoteRepository.Callback<Note>() {
             @Override public void onSuccess(Note updated) {
                 if (updated != null) {
                     List<Note> c = currentList();
@@ -132,6 +132,7 @@ public class NoteViewModel extends AndroidViewModel {
     public boolean isPinSupported() { return features.isPinSupported(); }
     public boolean isTrashSupported() { return features.isTrashSupported(); }
     public boolean isTagsSupported() { return features.isTagsSupported(); }
+    public boolean isArchiveSupported() { return features.isArchiveSupported(); }
 
     /** Replaces the cached copy of a note with the server's version of it. */
     private void replaceInList(Note updated) {
@@ -158,6 +159,10 @@ public class NoteViewModel extends AndroidViewModel {
 
     public void setPinnedAndAwait(long id, boolean pinned, CompletionCallback cb) {
         repo.setPinned(id, pinned, patched(cb));
+    }
+
+    public void setArchivedAndAwait(long id, boolean archived, CompletionCallback cb) {
+        repo.setArchived(id, archived, patched(cb));
     }
 
     public void restoreNoteAndAwait(long id, CompletionCallback cb) {

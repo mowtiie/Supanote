@@ -15,6 +15,11 @@
         app:showAsAction="ifRoom" />
 
     <item
+        android:id="@+id/menu_item_archive"
+        android:title="@string/menu_archive"
+        app:showAsAction="never" />
+
+    <item
         android:id="@+id/menu_item_delete"
         android:title="@string/menu_delete"
         android:icon="@drawable/ic_delete"

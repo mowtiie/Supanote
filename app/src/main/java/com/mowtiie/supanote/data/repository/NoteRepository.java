@@ -67,21 +67,24 @@ public class NoteRepository {
                 clean.put("title", title);
                 clean.put("content", src.isNull("content") ? "" : src.optString("content", ""));
                 clean.put("pinned", src.optBoolean("pinned", false));
+                clean.put("archived", src.optBoolean("archived", false));
                 clean.put("tags", new JSONArray(Tags.normalize(parseTags(src.optJSONArray("tags")))));
                 cleaned.add(clean);
             }
 
-            // One insert request needs every object to have the same keys, so pinned and tags go on every note or on
+            // One insert request needs every object to have the same keys, so pinned, tags and archived go on every note or on
             // none. They are left off entirely when no note uses them or the server lacks the columns, which keeps
             // imports into a database that has not been upgraded working.
-            boolean anyPinned = false, anyTags = false;
+            boolean anyPinned = false, anyTags = false, anyArchived = false;
             for (JSONObject n : cleaned) {
                 anyPinned |= n.getBoolean("pinned");
+                anyArchived |= n.getBoolean("archived");
                 anyTags |= n.getJSONArray("tags").length() > 0;
             }
             for (JSONObject n : cleaned) {
                 if (!(anyPinned && features.isPinSupported())) n.remove("pinned");
                 if (!(anyTags && features.isTagsSupported())) n.remove("tags");
+                if (!(anyArchived && features.isArchiveSupported())) n.remove("archived");
             }
         } catch (JSONException e) {
             cb.onError(e);
@@ -206,14 +209,16 @@ public class NoteRepository {
 
     // ---------------------------- UPDATE ----------------------------
     /** @param pinned the new pinned state, or null to leave it as it is (also keeps old servers working)
-     *  @param tags the new tags, or null to leave them as they are */
-    public void updateNote(long id, String title, String content, Boolean pinned, List<String> tags, Callback<Note> cb) {
+     *  @param tags the new tags, or null to leave them as they are
+     *  @param archived the new archived state, or null to leave it as it is */
+    public void updateNote(long id, String title, String content, Boolean pinned, List<String> tags, Boolean archived, Callback<Note> cb) {
         JSONObject obj = new JSONObject();
         try {
             obj.put("title", title);
             obj.put("content", content);
             if (pinned != null) obj.put("pinned", pinned.booleanValue());
             if (tags != null) obj.put("tags", new JSONArray(tags));
+            if (archived != null) obj.put("archived", archived.booleanValue());
         } catch (JSONException e) { cb.onError(e); return; }
         patch(id, obj, cb);
     }
@@ -222,6 +227,14 @@ public class NoteRepository {
         JSONObject obj = new JSONObject();
         try {
             obj.put("pinned", pinned);
+        } catch (JSONException e) { cb.onError(e); return; }
+        patch(id, obj, cb);
+    }
+
+    public void setArchived(long id, boolean archived, Callback<Note> cb) {
+        JSONObject obj = new JSONObject();
+        try {
+            obj.put("archived", archived);
         } catch (JSONException e) { cb.onError(e); return; }
         patch(id, obj, cb);
     }
@@ -310,13 +323,14 @@ public class NoteRepository {
         if (arr.length() > 0) {
             // select=* returns every column, so a missing key means the user has not upgraded their schema.
             JSONObject first = arr.getJSONObject(0);
-            features.update(first.has("pinned"), first.has("deleted_at"), first.has("tags"));
+            features.update(first.has("pinned"), first.has("deleted_at"), first.has("tags"), first.has("archived"));
         }
         for (int i = 0; i < arr.length(); i++) {
             JSONObject o = arr.getJSONObject(i);
             Note n = new Note();
             n.setTags(parseTags(o.optJSONArray("tags")));
             n.setPinned(!o.isNull("pinned") && o.optBoolean("pinned", false));
+            n.setArchived(!o.isNull("archived") && o.optBoolean("archived", false));
             n.setDeletedAt(o.isNull("deleted_at") ? null : o.optString("deleted_at", null));
             n.setId(o.optLong("id"));
             n.setTitle(o.optString("title"));

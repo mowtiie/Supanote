@@ -24,7 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * The JSON backup file: {@code {"version":1,"exportedAt":<epoch ms>,"notes":[{"title","content","createdAt","tags"?,"pinned"?}]}}.
+ * The JSON backup file: {@code {"version":1,"exportedAt":<epoch ms>,"notes":[{"title","content","createdAt","tags"?,"pinned"?,"archived"?}]}}.
  * Both directions stream, so a large backup never has to exist as one string in memory.
  */
 public final class BackupFormat {
@@ -39,6 +39,7 @@ public final class BackupFormat {
     private static final String KEY_CREATED_AT = "createdAt";
     private static final String KEY_TAGS = "tags";
     private static final String KEY_PINNED = "pinned";
+    private static final String KEY_ARCHIVED = "archived";
 
     private BackupFormat() {
     }
@@ -59,6 +60,7 @@ public final class BackupFormat {
                 writer.name(KEY_CREATED_AT).value(note.getCreatedAt());
             }
             if (note.isPinned()) writer.name(KEY_PINNED).value(true);
+            if (note.isArchived()) writer.name(KEY_ARCHIVED).value(true);
             if (!note.getTags().isEmpty()) {
                 writer.name(KEY_TAGS).beginArray();
                 for (String tag : note.getTags()) writer.value(tag);
@@ -111,6 +113,7 @@ public final class BackupFormat {
         String title = null;
         String content = null;
         boolean pinned = false;
+        boolean archived = false;
         List<String> tags = new ArrayList<>();
 
         reader.beginObject();
@@ -122,6 +125,8 @@ public final class BackupFormat {
                 content = reader.nextString();
             } else if (KEY_PINNED.equals(name) && reader.peek() == JsonToken.BOOLEAN) {
                 pinned = reader.nextBoolean();
+            } else if (KEY_ARCHIVED.equals(name) && reader.peek() == JsonToken.BOOLEAN) {
+                archived = reader.nextBoolean();
             } else if (KEY_TAGS.equals(name) && reader.peek() == JsonToken.BEGIN_ARRAY) {
                 tags = readTags(reader);
             } else {
@@ -135,6 +140,7 @@ public final class BackupFormat {
                 .put(KEY_TITLE, title)
                 .put(KEY_CONTENT, content == null ? "" : content);
         if (pinned) note.put(KEY_PINNED, true);
+        if (archived) note.put(KEY_ARCHIVED, true);
         if (!tags.isEmpty()) note.put(KEY_TAGS, new JSONArray(tags));
         return note;
     }

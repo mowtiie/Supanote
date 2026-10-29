@@ -56,6 +56,8 @@ public class ManageNoteActivity extends SupanoteActivity {
     private boolean pinned = false;
     private boolean originalPinned = false;
 
+    private boolean archived = false;
+
     private boolean saving = false;
 
     @Override
@@ -128,6 +130,7 @@ public class ManageNoteActivity extends SupanoteActivity {
         originalTitle = note.getTitle() == null ? "" : note.getTitle();
         originalContent = note.getContent() == null ? "" : note.getContent();
         pinned = originalPinned = note.isPinned();
+        archived = note.isArchived();
         originalTags = new ArrayList<>(note.getTags());
         if (!tagsRestored) {
             tags.clear();
@@ -249,6 +252,7 @@ public class ManageNoteActivity extends SupanoteActivity {
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_manage_note, menu);
         menu.findItem(R.id.menu_item_delete).setVisible(noteId != -1L);
+        updateArchiveItem(menu);
         return true;
     }
 
@@ -261,6 +265,7 @@ public class ManageNoteActivity extends SupanoteActivity {
             invalidateOptionsMenu();
             return true;
         }
+        if (id == R.id.menu_item_archive) { save(!archived); return true; }
         if (id == R.id.menu_item_delete) { confirmDelete(); return true; }
         if (id == android.R.id.home) {
             if (hasUnsavedChanges()) confirmDiscard();
@@ -283,6 +288,7 @@ public class ManageNoteActivity extends SupanoteActivity {
                         : MaterialColors.getColor(binding.toolbar, com.google.android.material.R.attr.colorOnSurfaceVariant));
             }
         }
+        updateArchiveItem(menu);
         MenuItem del = menu.findItem(R.id.menu_item_delete);
 
         if (del != null) {
@@ -293,6 +299,11 @@ public class ManageNoteActivity extends SupanoteActivity {
     }
 
     private void saveNote() {
+        save(null);
+    }
+
+    /** Saves the note, and also archives or unarchives it when {@code archivedTarget} is not null. */
+    private void save(Boolean archivedTarget) {
         if (saving) return;
 
         String title = binding.noteInputTitle.getText() == null ? "" : binding.noteInputTitle.getText().toString().trim();
@@ -320,8 +331,17 @@ public class ManageNoteActivity extends SupanoteActivity {
             noteViewModel.addNoteAndAwait(title, content, pinned, currentTags(), onDone);
         } else {
             noteViewModel.updateNoteAndAwait(noteId, title, content, pinned != originalPinned ? pinned : null,
-                    Tags.sameTags(currentTags(), originalTags) ? null : currentTags(), onDone);
+                    Tags.sameTags(currentTags(), originalTags) ? null : currentTags(), archivedTarget, onDone);
         }
+    }
+
+    /** Archiving applies to a saved note, so the item is hidden for a new one and on a server without the column. */
+    private void updateArchiveItem(Menu menu) {
+        MenuItem item = menu.findItem(R.id.menu_item_archive);
+        if (item == null) return;
+        item.setVisible(noteId != -1L && noteViewModel.isArchiveSupported());
+        item.setTitle(archived ? R.string.menu_unarchive : R.string.menu_archive);
+        item.setEnabled(!saving);
     }
 
     private void setSaving(boolean value) {
