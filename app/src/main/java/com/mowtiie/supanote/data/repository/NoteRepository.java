@@ -66,13 +66,22 @@ public class NoteRepository {
                 JSONObject clean = new JSONObject();
                 clean.put("title", title);
                 clean.put("content", src.isNull("content") ? "" : src.optString("content", ""));
-                if (src.optBoolean("pinned", false) && features.isPinSupported()) clean.put("pinned", true);
-                JSONArray tags = src.optJSONArray("tags");
-                if (tags != null && features.isTagsSupported()) {
-                    List<String> normalized = Tags.normalize(parseTags(tags));
-                    if (!normalized.isEmpty()) clean.put("tags", new JSONArray(normalized));
-                }
+                clean.put("pinned", src.optBoolean("pinned", false));
+                clean.put("tags", new JSONArray(Tags.normalize(parseTags(src.optJSONArray("tags")))));
                 cleaned.add(clean);
+            }
+
+            // One insert request needs every object to have the same keys, so pinned and tags go on every note or on
+            // none. They are left off entirely when no note uses them or the server lacks the columns, which keeps
+            // imports into a database that has not been upgraded working.
+            boolean anyPinned = false, anyTags = false;
+            for (JSONObject n : cleaned) {
+                anyPinned |= n.getBoolean("pinned");
+                anyTags |= n.getJSONArray("tags").length() > 0;
+            }
+            for (JSONObject n : cleaned) {
+                if (!(anyPinned && features.isPinSupported())) n.remove("pinned");
+                if (!(anyTags && features.isTagsSupported())) n.remove("tags");
             }
         } catch (JSONException e) {
             cb.onError(e);

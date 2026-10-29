@@ -21,6 +21,10 @@ public abstract class SupanoteActivity extends AppCompatActivity {
 
     protected PreferenceUtil preferenceUtil;
 
+    // What this activity was themed with, so a change made in Settings reaches activities already in the back stack.
+    private String appliedContrast;
+    private boolean appliedDynamicColors;
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         preferenceUtil = new PreferenceUtil(this);
@@ -54,6 +58,8 @@ public abstract class SupanoteActivity extends AppCompatActivity {
             setTheme(R.style.Theme_Supanote_HighContrast);
         }
 
+        appliedContrast = contrast;
+        appliedDynamicColors = preferenceUtil.isDynamicColors();
         if (preferenceUtil.isDynamicColors()) {
             DynamicColors.applyToActivityIfAvailable(this);
         }
@@ -64,6 +70,10 @@ public abstract class SupanoteActivity extends AppCompatActivity {
         super.onResume();
         // Re-check on every resume so toggling the setting also covers activities already in the back stack.
         applyScreenPrivacy();
+        if (!isFinishing() && (!preferenceUtil.getContrast().equals(appliedContrast)
+                || preferenceUtil.isDynamicColors() != appliedDynamicColors)) {
+            recreate();
+        }
     }
 
     private void applyScreenPrivacy() {
