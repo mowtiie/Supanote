@@ -1,6 +1,8 @@
 package com.mowtiie.supanote;
 
 import android.app.Application;
+import android.os.Handler;
+import android.os.Looper;
 
 import com.mowtiie.supanote.data.local.ConnectionManager;
 import com.mowtiie.supanote.data.local.CrashHandler;
@@ -11,6 +13,7 @@ import com.mowtiie.supanote.data.remote.TokenAuthenticator;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.Executor;
 
 import okhttp3.OkHttpClient;
 
@@ -21,6 +24,7 @@ public class SupanoteApp extends Application {
     private OkHttpClient httpClient;
     private OkHttpClient authedHttpClient;
     private final ServerFeatures features = new ServerFeatures();
+    private Executor mainThread;
 
     /** The note most recently opened from the list, so the editor does not need it in intent extras. */
     private volatile Note openedNote;
@@ -32,6 +36,9 @@ public class SupanoteApp extends Application {
     public void onCreate() {
         super.onCreate();
         CrashHandler.install(this);
+
+        Handler mainHandler = new Handler(Looper.getMainLooper());
+        mainThread = mainHandler::post;
 
         session = new SessionManager(this);
         connection = new ConnectionManager(this);
@@ -64,6 +71,11 @@ public class SupanoteApp extends Application {
 
     public OkHttpClient authedHttpClient() {
         return authedHttpClient;
+    }
+
+    /** Runs a callback on the main thread; repositories use it to deliver results. */
+    public Executor mainThread() {
+        return mainThread;
     }
 
     public ServerFeatures features() {

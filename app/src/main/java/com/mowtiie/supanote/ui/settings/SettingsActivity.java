@@ -197,7 +197,7 @@ public class SettingsActivity extends SupanoteActivity {
         private void exportData() {
             showProgressDialog(R.string.dialog_message_progress_exporting);
             SupanoteApp app = (SupanoteApp) requireActivity().getApplication();
-            NoteRepository repo = new NoteRepository(app.connection(), app.session(), app.authedHttpClient(), app.features());
+            NoteRepository repo = new NoteRepository(app.connection(), app.session(), app.authedHttpClient(), app.features(), app.mainThread());
 
             repo.getNotes(new NoteRepository.Callback<List<Note>>() {
                 @Override public void onSuccess(List<Note> notes) {
@@ -331,7 +331,7 @@ public class SettingsActivity extends SupanoteActivity {
         private void uploadImportedNotes(List<JSONObject> notes) {
             showProgressDialog(R.string.dialog_message_progress_importing);
             SupanoteApp app = (SupanoteApp) requireActivity().getApplication();
-            NoteRepository repo = new NoteRepository(app.connection(), app.session(), app.authedHttpClient(), app.features());
+            NoteRepository repo = new NoteRepository(app.connection(), app.session(), app.authedHttpClient(), app.features(), app.mainThread());
 
             repo.bulkInsert(notes, new NoteRepository.Callback<Integer>() {
                 @Override public void onSuccess(Integer count) {
@@ -362,7 +362,7 @@ public class SettingsActivity extends SupanoteActivity {
                     .setPositiveButton(R.string.button_changer_server_continue, (d, w) -> {
                         SupanoteApp app = (SupanoteApp) requireActivity().getApplication();
                         // Revoke the session on the old server (best effort) before forgetting it.
-                        new AuthRepository(app, app.connection(), app.session(), app.httpClient()).signOut();
+                        new AuthRepository(app, app.connection(), app.session(), app.httpClient(), app.mainThread()).signOut();
                         app.connection().clear();
                         Intent intent = new Intent(requireContext(), SetupActivity.class);
                         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);

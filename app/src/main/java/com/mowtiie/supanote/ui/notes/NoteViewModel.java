@@ -40,7 +40,7 @@ public class NoteViewModel extends AndroidViewModel {
     public NoteViewModel(@NonNull Application app) {
         super(app);
         SupanoteApp supanoteApp = (SupanoteApp) app;
-        repo = new NoteRepository(supanoteApp.connection(), supanoteApp.session(), supanoteApp.authedHttpClient(), supanoteApp.features());
+        repo = new NoteRepository(supanoteApp.connection(), supanoteApp.session(), supanoteApp.authedHttpClient(), supanoteApp.features(), supanoteApp.mainThread());
         features = supanoteApp.features();
     }
 

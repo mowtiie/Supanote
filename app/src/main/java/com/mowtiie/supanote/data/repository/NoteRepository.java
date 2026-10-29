@@ -1,8 +1,5 @@
 package com.mowtiie.supanote.data.repository;
 
-import android.os.Handler;
-import android.os.Looper;
-
 
 import com.mowtiie.supanote.data.local.ConnectionManager;
 import com.mowtiie.supanote.data.local.SessionManager;
@@ -21,6 +18,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.TimeZone;
+import java.util.concurrent.Executor;
 
 public class NoteRepository {
 
@@ -33,9 +31,11 @@ public class NoteRepository {
     private final SessionManager session;
     private final OkHttpClient client;
     private final ServerFeatures features;
-    private final Handler main = new Handler(Looper.getMainLooper());
+    /** Delivers callbacks on the main thread; tests pass an executor that runs them inline. */
+    private final Executor main;
 
-    public NoteRepository(ConnectionManager connection, SessionManager session, OkHttpClient client, ServerFeatures features) {
+    public NoteRepository(ConnectionManager connection, SessionManager session, OkHttpClient client, ServerFeatures features, Executor main) {
+        this.main = main;
         this.connection = connection;
         this.session = session;
         this.client = client;
@@ -120,7 +120,7 @@ public class NoteRepository {
                 }
 
                 if (end >= cleaned.size()) {
-                    main.post(() -> cb.onSuccess(cleaned.size()));
+                    main.execute(() -> cb.onSuccess(cleaned.size()));
                 } else {
                     insertBatch(cleaned, end, cb);
                 }
@@ -178,7 +178,7 @@ public class NoteRepository {
                     String json = b != null ? b.string() : "[]";
                     if (!res.isSuccessful()) throw ApiException.of(res.code(), json);
                     List<Note> notes = parseNotes(json);
-                    main.post(() -> cb.onSuccess(notes));
+                    main.execute(() -> cb.onSuccess(notes));
                 } catch (Exception e) { fail(cb, e); }
             }
         });
@@ -278,7 +278,7 @@ public class NoteRepository {
                         String body = b != null ? b.string() : "";
                         throw ApiException.of(res.code(), body);
                     }
-                    main.post(() -> cb.onSuccess(null));
+                    main.execute(() -> cb.onSuccess(null));
                 } catch (Exception e) { fail(cb, e); }
             }
         });
@@ -295,7 +295,7 @@ public class NoteRepository {
                         String body = b != null ? b.string() : "";
                         throw ApiException.of(res.code(), body);
                     }
-                    main.post(() -> cb.onSuccess(null));
+                    main.execute(() -> cb.onSuccess(null));
                 } catch (Exception e) { fail(cb, e); }
             }
         });
@@ -311,7 +311,7 @@ public class NoteRepository {
                     if (!res.isSuccessful()) throw ApiException.of(res.code(), json);
                     List<Note> notes = parseNotes(json);
                     Note note = notes.isEmpty() ? null : notes.get(0);
-                    main.post(() -> cb.onSuccess(note));
+                    main.execute(() -> cb.onSuccess(note));
                 } catch (Exception e) { fail(cb, e); }
             }
         });
@@ -355,6 +355,6 @@ public class NoteRepository {
     }
 
     private <T> void fail(Callback<T> cb, Exception e) {
-        main.post(() -> cb.onError(e));
+        main.execute(() -> cb.onError(e));
     }
 }

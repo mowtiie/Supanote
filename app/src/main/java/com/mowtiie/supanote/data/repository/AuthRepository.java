@@ -2,8 +2,6 @@ package com.mowtiie.supanote.data.repository;
 
 import android.content.Context;
 import android.content.res.Resources;
-import android.os.Handler;
-import android.os.Looper;
 
 import com.mowtiie.supanote.R;
 import com.mowtiie.supanote.data.local.ConnectionManager;
@@ -13,6 +11,7 @@ import com.mowtiie.supanote.data.remote.NetworkErrors;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.util.concurrent.Executor;
 
 import okhttp3.Call;
 import okhttp3.MediaType;
@@ -27,13 +26,15 @@ public class AuthRepository {
     private static final MediaType JSON = MediaType.get("application/json");
 
     private final OkHttpClient client;
-    private final Handler main = new Handler(Looper.getMainLooper());
+    /** Delivers callbacks on the main thread; tests pass an executor that runs them inline. */
+    private final Executor main;
     private final SessionManager session;
     private final ConnectionManager connection;
 
     private final Resources resources;
 
-    public AuthRepository(Context context, ConnectionManager connection, SessionManager session, OkHttpClient client) {
+    public AuthRepository(Context context, ConnectionManager connection, SessionManager session, OkHttpClient client, Executor main) {
+        this.main = main;
         this.resources = context.getApplicationContext().getResources();
         this.session = session;
         this.connection = connection;
@@ -95,24 +96,24 @@ public class AuthRepository {
 
         client.newCall(req).enqueue(new okhttp3.Callback() {
             @Override public void onFailure(Call call, IOException e) {
-                main.post(() -> cb.onError(describe(e)));
+                main.execute(() -> cb.onError(describe(e)));
             }
             @Override public void onResponse(Call call, Response res) {
                 try (ResponseBody b = res.body()) {
                     String json = b != null ? b.string() : "";
                     if (!res.isSuccessful()) {
-                        main.post(() -> cb.onError(friendlyError(json)));
+                        main.execute(() -> cb.onError(friendlyError(json)));
                         return;
                     }
                     JSONObject obj = new JSONObject(json);
                     if (obj.optString("access_token", null) == null) {
-                        main.post(() -> cb.onError(resources.getString(R.string.error_confirm_email)));
+                        main.execute(() -> cb.onError(resources.getString(R.string.error_confirm_email)));
                         return;
                     }
                     session.saveSession(obj);
-                    main.post(cb::onSuccess);
+                    main.execute(cb::onSuccess);
                 } catch (Exception e) {
-                    main.post(() -> cb.onError(describe(e)));
+                    main.execute(() -> cb.onError(describe(e)));
                 }
             }
         });
