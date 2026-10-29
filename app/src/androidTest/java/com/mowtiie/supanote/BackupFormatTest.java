@@ -141,6 +141,7 @@ public class BackupFormatTest {
     @Test
     public void tagsSurviveARoundTrip() throws Exception {
         Note tagged = new Note(1, "Tagged", "c", "2026-01-01T00:00:00Z");
+        tagged.setPinned(true);
         tagged.setTags(Arrays.asList("work", "Home Office"));
         Note plain = new Note(2, "Plain", "c", "2026-01-01T00:00:00Z");
 
@@ -151,6 +152,8 @@ public class BackupFormatTest {
         assertEquals("work", imported.get(0).getJSONArray("tags").getString(0));
         assertEquals("Home Office", imported.get(0).getJSONArray("tags").getString(1));
         assertFalse(imported.get(1).has("tags"));
+        assertTrue(imported.get(0).getBoolean("pinned"));
+        assertFalse(imported.get(1).has("pinned"));
     }
 
     @Test

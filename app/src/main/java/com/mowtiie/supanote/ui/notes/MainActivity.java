@@ -55,6 +55,9 @@ public class MainActivity extends SupanoteActivity implements NoteAdapter.OnNote
     private static final String STATE_SEARCH_QUERY = "state_search_query";
     private static final String STATE_TAG_FILTER = "state_tag_filter";
 
+    /** The "re-run schema.sql" hint is shown once per app run, not on every rotation or refresh. */
+    private static boolean schemaHintShown = false;
+
     private enum Sort { NEWEST, OLDEST, TITLE_AZ, TITLE_ZA }
     private enum ListState { LOADING, LOADED_EMPTY, LOADED_WITH_NOTES, ERROR }
     private ListState state = ListState.LOADING;
@@ -146,6 +149,7 @@ public class MainActivity extends SupanoteActivity implements NoteAdapter.OnNote
             }
             rebuildSearchIndex();
             rebuildTagBar();
+            showSchemaHintOnce();
             if (allNotes.isEmpty()) {
                 if (state != ListState.ERROR) state = ListState.LOADED_EMPTY;
             } else {
@@ -252,6 +256,16 @@ public class MainActivity extends SupanoteActivity implements NoteAdapter.OnNote
             if (wasAtTop && binding != null) binding.notesRecycler.scrollToPosition(0);
         });
         updateEmptyState(result.isEmpty());
+    }
+
+    private void showSchemaHintOnce() {
+        if (schemaHintShown || allNotes.isEmpty()) return;
+        if (noteViewModel.isPinSupported() && noteViewModel.isTrashSupported() && noteViewModel.isTagsSupported()) return;
+        schemaHintShown = true;
+        Snackbar.make(binding.getRoot(), R.string.snackbar_schema_outdated, Snackbar.LENGTH_LONG)
+                .setDuration(UNDO_DURATION_MS + 4000)
+                .setAction(R.string.button_close, v -> { })
+                .show();
     }
 
     /**

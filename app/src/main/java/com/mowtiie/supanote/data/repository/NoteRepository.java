@@ -66,6 +66,7 @@ public class NoteRepository {
                 JSONObject clean = new JSONObject();
                 clean.put("title", title);
                 clean.put("content", src.isNull("content") ? "" : src.optString("content", ""));
+                if (src.optBoolean("pinned", false) && features.isPinSupported()) clean.put("pinned", true);
                 JSONArray tags = src.optJSONArray("tags");
                 if (tags != null && features.isTagsSupported()) {
                     List<String> normalized = Tags.normalize(parseTags(tags));

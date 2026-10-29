@@ -178,16 +178,18 @@ public class ManageNoteActivity extends SupanoteActivity {
     /** Turns the text in the tag field into tags; a comma ends one tag, so several can be pasted at once. */
     private void commitTag() {
         String typed = binding.noteInputTag.getText() == null ? "" : binding.noteInputTag.getText().toString();
-        boolean full = false;
+        String rejected = null;
         for (String part : typed.split(",")) {
             String tag = Tags.clean(part);
             if (tag.isEmpty() || Tags.contains(tags, tag)) continue;
-            if (!Tags.add(tags, tag)) full = true;
+            if (!Tags.add(tags, tag) && rejected == null) rejected = tag;
         }
-        binding.noteInputTag.setText("");
+        // A tag that did not fit stays in the field, so what the user typed is not lost along with the error.
+        binding.noteInputTag.setText(rejected == null ? "" : rejected);
+        if (rejected != null) binding.noteInputTag.setSelection(rejected.length());
         binding.noteInputTag.dismissDropDown();
         renderTags();
-        if (full) binding.noteTagLayout.setError(getResources().getQuantityString(R.plurals.error_tags_limit, Tags.MAX_TAGS_PER_NOTE, Tags.MAX_TAGS_PER_NOTE));
+        if (rejected != null) binding.noteTagLayout.setError(getResources().getQuantityString(R.plurals.error_tags_limit, Tags.MAX_TAGS_PER_NOTE, Tags.MAX_TAGS_PER_NOTE));
     }
 
     private void renderTags() {

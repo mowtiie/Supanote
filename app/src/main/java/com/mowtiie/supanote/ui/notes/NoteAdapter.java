@@ -104,7 +104,7 @@ public class NoteAdapter extends ListAdapter<Note, NoteAdapter.NoteViewHolder> {
                 actions.onActionsRequested(note);
                 return true;
             });
-            // Swiping is not possible with a screen reader, so expose the same action to TalkBack.
+            // Long-press is awkward with a screen reader, so expose the same actions menu to TalkBack.
             ViewCompat.replaceAccessibilityAction(itemView,
                     AccessibilityNodeInfoCompat.AccessibilityActionCompat.ACTION_LONG_CLICK,
                     itemView.getContext().getString(R.string.label_note_actions),

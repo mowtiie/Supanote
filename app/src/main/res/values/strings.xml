@@ -131,6 +131,7 @@
     <string name="button_move_to_trash">Move to trash</string>
     <string name="button_restore">Restore</string>
     <string name="button_delete_forever">Delete forever</string>
+    <string name="snackbar_schema_outdated">Your database is missing newer columns. Re-run schema.sql to enable pins, trash and tags.</string>
     <string name="snackbar_note_trashed">Moved to trash</string>
     <string name="dialog_title_note_trash">Move to trash?</string>
     <string name="dialog_message_note_trash">You can restore it from the trash later.</string>
